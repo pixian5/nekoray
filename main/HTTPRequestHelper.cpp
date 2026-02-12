@@ -69,8 +69,23 @@ namespace NekoGui_network {
             abortTimer->deleteLater();
         }
         //
-        auto result = NekoHTTPResponse{_reply->error() == QNetworkReply::NetworkError::NoError ? "" : _reply->errorString(),
-                                       _reply->readAll(), _reply->rawHeaderPairs()};
+        QString error;
+        if (_reply->error() != QNetworkReply::NetworkError::NoError) {
+            error = _reply->errorString();
+
+            auto errorEnum = QMetaEnum::fromType<QNetworkReply::NetworkError>();
+            const auto *errorName = errorEnum.valueToKey(_reply->error());
+            if (errorName != nullptr && *errorName != '\0') {
+                error += " (" + QString::fromLatin1(errorName) + ")";
+            }
+
+            const auto statusCode = _reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (statusCode > 0) {
+                error += " [HTTP " + QString::number(statusCode) + "]";
+            }
+        }
+
+        auto result = NekoHTTPResponse{error, _reply->readAll(), _reply->rawHeaderPairs()};
         _reply->deleteLater();
         return result;
     }
