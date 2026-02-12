@@ -1653,6 +1653,10 @@ Release note:
         <source>The last speed test did not exit completely, please wait. If it persists, please restart the program.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Speedtest finished.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Qv2ray::ui::widgets::AutoCompleteTextEdit</name>
