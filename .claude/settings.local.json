@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where:*)",
+      "Bash(cmake:*)",
+      "Bash(gcc:*)",
+      "Bash(ninja --version)",
+      "Bash(test:*)",
+      "Bash(/c/msys64/mingw64/bin/gcc.exe:*)",
+      "Bash(/c/msys64/mingw64/bin/cmake.exe:*)",
+      "Bash(/c/msys64/mingw64/bin/ninja.exe --version)",
+      "Bash(git submodule:*)",
+      "Bash(/c/msys64/usr/bin/bash.exe -lc \"export PATH=/mingw64/bin:$PATH && cd /d/00code/nekoray && rm -rf build && cmake -G Ninja -S . -B build -DNKR_DISABLE_LIBS=1 2>&1\")",
+      "Bash(/c/msys64/usr/bin/bash.exe -lc \"export PATH=/mingw64/bin:$PATH && cd /d/00code/nekoray/build && ldd nekobox.exe | grep mingw64 | awk ''{print $3}'' | sort\")",
+      "Bash(/c/msys64/usr/bin/bash.exe -c \"PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin && cd /d/00code/nekoray/build && ldd nekobox.exe 2>/dev/null | grep mingw64 | awk ''{print $3}'' | sort\")",
+      "Bash(/c/msys64/usr/bin/bash.exe -c 'PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin && cd /d/00code/nekoray/build && ldd nekobox.exe 2>/dev/null | grep mingw64 | awk \"\"{print \\\\$3}\"\" | sort')",
+      "Bash(/c/msys64/usr/bin/env.exe PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin /c/msys64/usr/bin/bash.exe -c \"cd /d/00code/nekoray/build && ldd nekobox.exe | grep mingw64 | awk ''{print $3}'' | sort\")",
+      "Bash(/c/msys64/usr/bin/env.exe PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin /c/msys64/usr/bin/bash.exe -c 'cd /d/00code/nekoray/build && ldd nekobox.exe | grep mingw64')",
+      "Bash(/c/msys64/usr/bin/env.exe PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin /c/msys64/usr/bin/bash.exe -c 'cd /d/00code/nekoray/build && ldd nekobox.exe | grep mingw64 | sed \"\"s/.*=> //\"\" | sed \"\"s/ \\(.*\\)//\"\" | while read dll; do cp -v \"\"$dll\"\" . ; done')",
+      "Bash(/c/msys64/usr/bin/env.exe PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin /c/msys64/usr/bin/bash.exe -c 'cd /d/00code/nekoray/build && mkdir -p platforms imageformats iconengines && cp -v /mingw64/share/qt5/plugins/platforms/qwindows.dll platforms/ && cp -v /mingw64/bin/Qt5Svg.dll . && cp -v /mingw64/share/qt5/plugins/imageformats/*.dll imageformats/ && cp -v /mingw64/share/qt5/plugins/iconengines/*.dll iconengines/')",
+      "Bash(start:*)",
+      "Bash(taskkill:*)",
+      "Bash(PATH=\"/c/msys64/mingw64/bin:$PATH\" ninja)",
+      "Bash(ls:*)"
+    ]
+  }
+}

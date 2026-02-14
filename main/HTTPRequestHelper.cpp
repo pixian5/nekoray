@@ -13,7 +13,12 @@ namespace NekoGui_network {
     NekoHTTPResponse NetworkRequestHelper::HttpGet(const QUrl &url) {
         QNetworkRequest request;
         QNetworkAccessManager accessManager;
-        request.setUrl(url);
+        // Default to https if no scheme is provided
+        QUrl fixedUrl = url;
+        if (fixedUrl.scheme().isEmpty()) {
+            fixedUrl.setScheme("https");
+        }
+        request.setUrl(fixedUrl);
         // Set proxy
         if (NekoGui::dataStore->sub_use_proxy) {
             QNetworkProxy p;

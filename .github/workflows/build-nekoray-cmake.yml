@@ -1,18 +1,26 @@
-name: Nekoray build matrix - cmake
+name: Build nekoray
 
 on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
         description: "Release Tag"
-        required: true
+        required: false
       publish:
-        description: "Publish: If want ignore"
+        description: "Publish: y to skip"
         required: false
-      artifact-pack:
-        description: "artifact-pack: If want ignore"
-        required: false
+
 jobs:
+  # ─────────────────────────────────────────────
+  # Build Go binaries
+  # ─────────────────────────────────────────────
   build-go:
     strategy:
       matrix:
@@ -24,157 +32,186 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - name: Checking out sources
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Go Status
         run: git ls-files go | xargs cat | sha1sum > go_status
-      - name: Cache Common Download
-        id: cache-common
-        uses: actions/cache@v3
+      - name: Cache Go build
+        id: cache-go
+        uses: actions/cache@v4
         with:
           path: artifacts.tgz
-          key: CommonCache-${{ matrix.cross_os }}-${{ matrix.cross_arch }}-${{ hashFiles('libs/*.sh', 'go_status', '*.txt') }}
-      - name: Install Golang
-        if: steps.cache-common.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v3
+          key: go-${{ matrix.cross_os }}-${{ matrix.cross_arch }}-${{ hashFiles('libs/*.sh', 'go_status', '*.txt') }}
+      - name: Setup Go
+        if: steps.cache-go.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
         with:
-          go-version: ^1.22
-      - name: Build golang parts
-        if: steps.cache-common.outputs.cache-hit != 'true'
-        shell: bash
+          go-version: "^1.22"
+      - name: Build
+        if: steps.cache-go.outputs.cache-hit != 'true'
         run: |
-          [ ${{ matrix.cross_os }} == public_res ] || ./libs/get_source.sh
-          [ ${{ matrix.cross_os }} == public_res ] || GOOS=${{ matrix.cross_os }} GOARCH=${{ matrix.cross_arch }} ./libs/build_go.sh
-          [ ${{ matrix.cross_os }} == public_res ] || exit 0
-          ./libs/build_public_res.sh
-      - name: Tar files
-        if: steps.cache-common.outputs.cache-hit != 'true'
+          if [ "${{ matrix.cross_os }}" = "public_res" ]; then
+            ./libs/build_public_res.sh
+          else
+            ./libs/get_source.sh
+            GOOS=${{ matrix.cross_os }} GOARCH=${{ matrix.cross_arch }} ./libs/build_go.sh
+          fi
+      - name: Tar artifacts
+        if: steps.cache-go.outputs.cache-hit != 'true'
         run: tar czvf artifacts.tgz ./deployment
-      - name: Uploading Artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: NekoRay-${{ github.sha }}-Common-${{ matrix.cross_os }}-${{ matrix.cross_arch }}
+          name: go-${{ matrix.cross_os }}-${{ matrix.cross_arch }}
           path: artifacts.tgz
-  build-cpp:
-    strategy:
-      matrix:
-        include:
-          - platform: windows-2022
-            arch: x64
-            qt_version: "6.7"
-          - platform: ubuntu-20.04
-            arch: x64
-            qt_version: "5.12"
-      fail-fast: false
 
-    runs-on: ${{ matrix.platform }}
-    env:
-      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  # ─────────────────────────────────────────────
+  # Build C++ GUI - Windows (MSYS2 MinGW64 + Qt5)
+  # ─────────────────────────────────────────────
+  build-cpp-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-      - name: Checking out sources
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          submodules: "recursive"
-      - name: Install MSVC compiler
-        if: matrix.platform == 'windows-2022'
-        uses: ilammy/msvc-dev-cmd@v1
+          submodules: recursive
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
         with:
-          # 14.1 is for vs2017, 14.2 is vs2019, following the upstream vcpkg build from Qv2ray-deps repo
-          toolset: 14.2
-          arch: ${{ matrix.arch }}
-      # ========================================================================================================= Qt Install
-      - name: Windows - Download Custom Qt ${{ matrix.qt_version }} SDK
-        shell: bash
-        if: matrix.platform == 'windows-2022'
-        env:
-          DL_QT_VER: ${{ matrix.qt_version }}
-        run: bash ./libs/download_qtsdk_win.sh
-      # ========================================================================================================= 编译与 Qt 无关的依赖
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
-      - name: Cache Download
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt5-base
+            mingw-w64-x86_64-qt5-svg
+            mingw-w64-x86_64-qt5-tools
+            mingw-w64-x86_64-protobuf
+            mingw-w64-x86_64-yaml-cpp
+            mingw-w64-x86_64-zxing-cpp
+      - name: Build C++
+        run: |
+          mkdir -p build && cd build
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNKR_DISABLE_LIBS=ON \
+            -DQT_VERSION_MAJOR=5 \
+            ..
+          ninja
+      - name: Deploy
+        run: |
+          source libs/env_deploy.sh
+          DEST=$DEPLOYMENT/windows64
+          mkdir -p $DEST
+          cp build/nekobox.exe $DEST/
+          cd $DEST
+          windeployqt-qt5.exe nekobox.exe --no-compiler-runtime --no-opengl-sw || true
+          rm -rf translations
+          rm -f libEGL.dll libGLESv2.dll
+          # Qt plugins
+          QT_PLUGIN_DIR="/mingw64/share/qt5/plugins"
+          mkdir -p platforms iconengines imageformats styles
+          cp $QT_PLUGIN_DIR/platforms/qwindows.dll platforms/
+          cp $QT_PLUGIN_DIR/iconengines/*.dll iconengines/ 2>/dev/null || true
+          cp $QT_PLUGIN_DIR/imageformats/*.dll imageformats/ 2>/dev/null || true
+          cp $QT_PLUGIN_DIR/styles/*.dll styles/ 2>/dev/null || true
+          # MinGW runtime
+          for dll in libwinpthread-1.dll libgcc_s_seh-1.dll libstdc++-6.dll; do
+            cp /mingw64/bin/$dll .
+          done
+          # Library DLLs
+          cp /mingw64/bin/libZXing.dll . 2>/dev/null || cp /mingw64/bin/libzxing*.dll . 2>/dev/null || true
+          cp /mingw64/bin/libprotobuf*.dll .
+          cp /mingw64/bin/libyaml-cpp.dll .
+          cp /mingw64/bin/libabsl_*.dll .
+          cp /mingw64/bin/libutf8_validity.dll .
+          # OpenSSL for HTTPS
+          cp /mingw64/bin/libssl-3-x64.dll .
+          cp /mingw64/bin/libcrypto-3-x64.dll .
+          # Indirect dependencies
+          for dll in libpng16-16.dll zlib1.dll libharfbuzz-0.dll libfreetype-6.dll \
+                     libgraphite2.dll libdouble-conversion.dll libpcre2-16-0.dll \
+                     libpcre2-8-0.dll libzstd.dll libmd4c.dll libglib-2.0-0.dll \
+                     libbz2-1.dll libiconv-2.dll libintl-8.dll libbrotlidec.dll \
+                     libbrotlicommon.dll; do
+            cp /mingw64/bin/$dll . 2>/dev/null || true
+          done
+          # ICU version varies across MSYS2 updates
+          cp /mingw64/bin/libicuin*.dll . 2>/dev/null || true
+          cp /mingw64/bin/libicuuc*.dll . 2>/dev/null || true
+          cp /mingw64/bin/libicudt*.dll . 2>/dev/null || true
+      - name: Tar artifacts
+        run: tar czvf artifacts.tgz ./deployment
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cpp-windows-mingw64
+          path: artifacts.tgz
+
+  # ─────────────────────────────────────────────
+  # Build C++ GUI - Linux (Docker + Qt5)
+  # ─────────────────────────────────────────────
+  build-cpp-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Cache deps
         id: cache-deps
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: libs/deps
-          key: DepsCache-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('libs/build_deps_*.sh') }}-Qt${{ matrix.qt_version }}
-      - name: Build Dependencies
-        shell: bash
-        if: steps.cache-deps.outputs.cache-hit != 'true' && matrix.platform != 'ubuntu-20.04'
-        run: ./libs/build_deps_all.sh
-      - name: Build Dependencies (Docker)
-        shell: bash
-        if: steps.cache-deps.outputs.cache-hit != 'true' && matrix.platform == 'ubuntu-20.04'
+          key: deps-linux-${{ hashFiles('libs/build_deps_*.sh') }}
+      - name: Build deps + C++ (Docker)
         run: |
           docker run --rm \
-            -v $PWD:/nekoray \
-            -w /nekoray \
+            -v $PWD:/nekoray -w /nekoray \
             ghcr.io/matsuridayo/debian10-qt5:20230131 \
-            bash -c "./libs/build_deps_all.sh"
-      # ========================================================================================================= Generate MakeFile and Build
-      - name: Windows - Generate MakeFile and Build
-        shell: bash
-        if: matrix.platform == 'windows-2022'
-        env:
-          DL_QT_VER: ${{ matrix.qt_version }}
-          CC: cl.exe
-          CXX: cl.exe
-        run: |
-          source libs/env_qtsdk.sh $PWD/qtsdk/Qt
-          mkdir build
-          cd build
-          cmake -GNinja -DQT_VERSION_MAJOR=6 -DCMAKE_BUILD_TYPE=Release ..
-          ninja -j2
-          cd ..
-          ./libs/deploy_windows64.sh
-      - name: Linux - Generate MakeFile and Build
-        shell: bash
-        if: matrix.platform == 'ubuntu-20.04'
-        run: |
-          docker run --rm \
-            -v $PWD:/nekoray \
-            -w /nekoray \
-            ghcr.io/matsuridayo/debian10-qt5:20230131 \
-            bash -c "mkdir build && pushd build && cmake -GNinja -DCMAKE_BUILD_TYPE=Release .. && ninja && popd &&./libs/deploy_linux64.sh"
-      # ========================================================================================================= Deployments
-      - name: Tar files
-        shell: bash
+            bash -c "
+              [ -d libs/deps/built ] || ./libs/build_deps_all.sh
+              mkdir -p build && cd build
+              cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+              ninja
+              cd .. && ./libs/deploy_linux64.sh
+            "
+      - name: Tar artifacts
         run: tar czvf artifacts.tgz ./deployment
-      - name: Uploading Artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: NekoRay-${{ github.sha }}-${{ matrix.platform }}-${{ matrix.arch }}-Qt${{ matrix.qt_version }}
+          name: cpp-linux-x64
           path: artifacts.tgz
+
+  # ─────────────────────────────────────────────
+  # Pack & Publish Release (manual dispatch only)
+  # ─────────────────────────────────────────────
   publish:
     name: Pack & Publish Release
-    if: github.event.inputs.artifact-pack != 'y'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish != 'y'
     runs-on: ubuntu-latest
     needs:
-      - build-cpp
+      - build-cpp-windows
+      - build-cpp-linux
       - build-go
     steps:
-      - name: Checking out sources
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: download-artifact
       - name: Pack
         run: |
           curl -Lo - https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz | tar xzv
           mv ghr*linux_amd64/ghr .
-          ####
           source libs/env_deploy.sh
           find . -name artifacts.tgz | xargs -n1 tar xvzf
           cd deployment
-          cp -r public_res/* linux64
-          cp -r public_res/* windows64
+          cp -r public_res/* linux64 2>/dev/null || true
+          cp -r public_res/* windows64 2>/dev/null || true
           rm -rf public_res *.pdb
-          ####
           mv linux64 nekoray
           zip -r $version_standalone-linux64.zip nekoray
           rm -rf nekoray
-          ####
           mv windows64 nekoray
           zip -r $version_standalone-windows64.zip nekoray
           rm -rf nekoray
@@ -183,8 +220,7 @@ jobs:
           source libs/env_deploy.sh
           find . -name artifacts.tgz | xargs -n1 tar xvzf
           cd deployment
-          cp -r public_res/* linux64
-          ####
+          cp -r public_res/* linux64 2>/dev/null || true
           bash ../libs/package_debian.sh ${{ github.event.inputs.tag }}
           mv nekoray.deb $version_standalone-debian-x64.deb
           sudo rm -rf nekoray
@@ -193,23 +229,19 @@ jobs:
           source libs/env_deploy.sh
           find . -name artifacts.tgz | xargs -n1 tar xvzf
           cd deployment
-          cp -r public_res/* linux64
-          ####
+          cp -r public_res/* linux64 2>/dev/null || true
           bash ../libs/package_appimage.sh
           mv nekobox-x86_64.AppImage $version_standalone-linux-x64.AppImage
       - name: Clean Up
         run: |
           cd deployment
-          rm -rf linux64
-          rm -rf windows64
-          rm -rf public_res
-          rm -rf *.pdb
+          rm -rf linux64 windows64 public_res *.pdb
       - name: Uploading Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Deployment-${{ github.sha }}
           path: deployment
       - name: Release
-        if: github.event.inputs.publish != 'y'
+        if: github.event.inputs.tag
         run: |
           ./ghr -delete -t "${{ github.token }}" -n "${{ github.event.inputs.tag }}" "${{ github.event.inputs.tag }}" deployment

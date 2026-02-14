@@ -77,7 +77,7 @@ CMakeLists.txt.user*
 /build-*
 .vscode
 .idea
-
+/.cache/go-build
 # Deploy
 /deployment
 /neko*.sh
