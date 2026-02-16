@@ -16,6 +16,8 @@
 #include <QDialogButtonBox>
 #include <QMutexLocker>
 #include <QSemaphore>
+#include <QElapsedTimer>
+#include <QTcpSocket>
 
 #include <atomic>
 
@@ -35,6 +37,22 @@ std::list<std::shared_ptr<NekoGui_sys::ExternalProcess>> CreateExtCFromExtR(cons
         if (start) extC->Start();
     }
     return l;
+}
+
+bool WaitLocalSocksReady(int port, int timeoutMs = 4000) {
+    if (port <= 0) return true;
+    QElapsedTimer timer;
+    timer.start();
+    while (timer.elapsed() < timeoutMs) {
+        QTcpSocket socket;
+        socket.connectToHost("127.0.0.1", static_cast<quint16>(port));
+        if (socket.waitForConnected(120)) {
+            socket.disconnectFromHost();
+            return true;
+        }
+        QThread::msleep(50);
+    }
+    return false;
 }
 
 // grpc
@@ -183,6 +201,8 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                     //
                     std::list<std::shared_ptr<NekoGui_sys::ExternalProcess>> extCs;
                     QSemaphore extSem;
+                    bool extReady = true;
+                    int extSocksPort = 0;
 
                     if (mode == libcore::TestMode::UrlTest || mode == libcore::FullTest) {
                         auto c = BuildConfig(profile, true, false);
@@ -197,14 +217,35 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         }
                         //
                         if (!c->extRs.empty()) {
+                            extSocksPort = c->extSocksPort;
                             runOnUiThread(
                                 [&] {
                                     extCs = CreateExtCFromExtR(c->extRs, true);
-                                    QThread::msleep(500);
+                                    extReady = WaitLocalSocksReady(extSocksPort);
                                     extSem.release();
                                 },
                                 DS_cores);
                             extSem.acquire();
+                            if (!extReady) {
+                                runOnUiThread(
+                                    [&] {
+                                        for (const auto &extC: extCs) {
+                                            extC->Kill();
+                                        }
+                                    },
+                                    DS_cores);
+                                profile->latency = -1;
+                                profile->full_test_report = "External core SOCKS5 startup timeout";
+                                profile->Save();
+                                MW_show_log(tr("[%1] test error: external core socks5 port not ready: %2")
+                                                .arg(profile->bean->DisplayTypeAndName())
+                                                .arg(extSocksPort));
+                                auto profileId = profile->id;
+                                runOnUiThread([this, profileId] {
+                                    refresh_proxy_list(profileId);
+                                });
+                                continue;
+                            }
                         }
                         //
                         auto config = new libcore::LoadConfigReq;
@@ -350,6 +391,37 @@ void MainWindow::neko_start(int _id) {
     }
 
     auto neko_start_stage2 = [=] {
+        std::list<std::shared_ptr<NekoGui_sys::ExternalProcess>> startedExtCs;
+        auto stopStartedExtCs = [&](const std::list<std::shared_ptr<NekoGui_sys::ExternalProcess>> &extCs) {
+            if (extCs.empty()) return;
+            runOnUiThread(
+                [extCs] {
+                    for (const auto &extC: extCs) {
+                        extC->Kill();
+                    }
+                },
+                DS_cores);
+        };
+
+        if (!result->extRs.empty()) {
+            QSemaphore extSem;
+            bool extReady = true;
+            runOnUiThread(
+                [&] {
+                    startedExtCs = CreateExtCFromExtR(result->extRs, true);
+                    extReady = WaitLocalSocksReady(result->extSocksPort);
+                    extSem.release();
+                },
+                DS_cores);
+            extSem.acquire();
+            if (!extReady) {
+                stopStartedExtCs(startedExtCs);
+                MW_show_log("<<<<<<<< " + tr("Failed to start profile %1").arg(ent->bean->DisplayTypeAndName()) +
+                            " (external core SOCKS5 startup timeout)");
+                return false;
+            }
+        }
+
 #ifndef NKR_NO_GRPC
         libcore::LoadConfigReq req;
         req.set_core_config(QJsonObject2QString(result->coreConfig, false).toStdString());
@@ -362,9 +434,11 @@ void MainWindow::neko_start(int _id) {
         bool rpcOK;
         QString error = defaultClient->Start(&rpcOK, req);
         if (rpcOK && !error.isEmpty()) {
+            stopStartedExtCs(startedExtCs);
             runOnUiThread([=] { MessageBoxWarning("LoadConfig return error", error); });
             return false;
         } else if (!rpcOK) {
+            stopStartedExtCs(startedExtCs);
             return false;
         }
         //
@@ -374,12 +448,13 @@ void MainWindow::neko_start(int _id) {
         NekoGui_traffic::trafficLooper->loop_enabled = true;
 #endif
 
-        runOnUiThread(
-            [=] {
-                auto extCs = CreateExtCFromExtR(result->extRs, true);
-                NekoGui_sys::running_ext.splice(NekoGui_sys::running_ext.end(), extCs);
-            },
-            DS_cores);
+        if (!startedExtCs.empty()) {
+            runOnUiThread(
+                [startedExtCs]() mutable {
+                    NekoGui_sys::running_ext.splice(NekoGui_sys::running_ext.end(), startedExtCs);
+                },
+                DS_cores);
+        }
 
         NekoGui::dataStore->UpdateStartedId(ent->id);
         running = ent;
