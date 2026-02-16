@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     // top bar
-    ui->toolButton_groups->setMenu(ui->menu_groups);
+    connect(ui->toolButton_groups, &QToolButton::clicked, this, [=] { on_menu_manage_groups_triggered(); });
     ui->toolButton_program->setMenu(ui->menu_program);
     ui->toolButton_preferences->setMenu(ui->menu_preferences);
     ui->toolButton_server->setMenu(ui->menu_server);
