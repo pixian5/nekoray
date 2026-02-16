@@ -1191,10 +1191,6 @@ This needs to be run NekoBox with administrator privileges.</source>
         <translation>[%1] 测试错误: %2</translation>
     </message>
     <message>
-        <source>Clear</source>
-        <translation>清除</translation>
-    </message>
-    <message>
         <source>fake</source>
         <translation></translation>
     </message>
@@ -1504,6 +1500,22 @@ Split by line.</source>
     </message>
     <message>
         <source>[%1] test error: external core socks5 port not ready: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy All(&amp;A)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear(&amp;C)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

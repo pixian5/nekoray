@@ -45,6 +45,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QDir>
 #include <QFileInfo>
 
@@ -1182,10 +1183,23 @@ void MainWindow::on_menu_reset_traffic_triggered() {
 void MainWindow::on_menu_profile_debug_info_triggered() {
     auto ents = get_now_selected_list();
     if (ents.count() != 1) return;
-    auto btn = QMessageBox::information(this, software_name, ents.first()->ToJsonBytes(), "OK", "Edit", "Reload", 0, 0);
-    if (btn == 1) {
+
+    const auto debugInfo = ents.first()->ToJsonBytes();
+    QMessageBox msg(QMessageBox::Information, software_name, debugInfo, QMessageBox::NoButton, this);
+    auto btnCopy = msg.addButton(tr("Copy"), QMessageBox::AcceptRole);
+    auto btnOk = msg.addButton(QMessageBox::Ok);
+    auto btnEdit = msg.addButton(tr("Edit"), QMessageBox::ActionRole);
+    auto btnReload = msg.addButton(tr("Reload"), QMessageBox::ActionRole);
+    if (auto copyBtn = qobject_cast<QPushButton *>(btnCopy)) msg.setDefaultButton(copyBtn);
+    if (auto okBtn = qobject_cast<QPushButton *>(btnOk)) msg.setEscapeButton(okBtn);
+    msg.exec();
+
+    if (msg.clickedButton() == btnCopy) {
+        QApplication::clipboard()->setText(debugInfo);
+        show_log_impl(tr("Copied %1 item(s)").arg(1));
+    } else if (msg.clickedButton() == btnEdit) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(QStringLiteral("profiles/%1.json").arg(ents.first()->id)).absoluteFilePath()));
-    } else if (btn == 2) {
+    } else if (msg.clickedButton() == btnReload) {
         NekoGui::dataStore->Load();
         NekoGui::profileManager->LoadManager();
         refresh_proxy_list();
@@ -1620,8 +1634,22 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
     });
     menu->addAction(action_add_route);
 
-    auto action_clear = new QAction(this);
-    action_clear->setText(tr("Clear"));
+    auto action_copy_all = new QAction(menu);
+    action_copy_all->setText(tr("Copy All(&A)"));
+    action_copy_all->setShortcut(QKeySequence(Qt::Key_A));
+    action_copy_all->setShortcutContext(Qt::WidgetShortcut);
+    action_copy_all->setShortcutVisibleInContextMenu(true);
+    connect(action_copy_all, &QAction::triggered, this, [=] {
+        ui->masterLogBrowser->selectAll();
+        ui->masterLogBrowser->copy();
+    });
+    menu->addAction(action_copy_all);
+
+    auto action_clear = new QAction(menu);
+    action_clear->setText(tr("Clear(&C)"));
+    action_clear->setShortcut(QKeySequence(Qt::Key_C));
+    action_clear->setShortcutContext(Qt::WidgetShortcut);
+    action_clear->setShortcutVisibleInContextMenu(true);
     connect(action_clear, &QAction::triggered, this, [=] {
         qvLogDocument->clear();
         ui->masterLogBrowser->clear();

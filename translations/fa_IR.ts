@@ -1396,10 +1396,6 @@ Split by line.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear</source>
-        <translation>پاک کردن</translation>
-    </message>
-    <message>
         <source>Start: %1
 End: %2</source>
         <translation type="unfinished"></translation>
@@ -1498,6 +1494,22 @@ End: %2</source>
     </message>
     <message>
         <source>[%1] test error: external core socks5 port not ready: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy All(&amp;A)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear(&amp;C)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
