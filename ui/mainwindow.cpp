@@ -1418,7 +1418,7 @@ void MainWindow::on_menu_scan_qr_triggered() {
 
     show();
 
-    auto hints = DecodeHints()
+    auto hints = ReaderOptions()
                      .setFormats(BarcodeFormat::QRCode)
                      .setTryRotate(false)
                      .setBinarizer(Binarizer::FixedThreshold);
@@ -1589,7 +1589,7 @@ inline void FastAppendTextDocument(const QString &message, QTextDocument *doc) {
 }
 
 void MainWindow::show_log_impl(const QString &log) {
-    auto lines = SplitLines(log.trimmed());
+    auto lines = SplitLines(cleanVT100String(log).trimmed());
     if (lines.isEmpty()) return;
 
     static const QRegularExpression kLogDateTimePrefix(
