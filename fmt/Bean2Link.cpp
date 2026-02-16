@@ -51,7 +51,8 @@ namespace NekoGui_fmt {
         // type
         query.addQueryItem("type", stream->network);
 
-        if (stream->network == "ws" || stream->network == "http" || stream->network == "httpupgrade") {
+        if (stream->network == "ws" || stream->network == "http" || stream->network == "httpupgrade" ||
+            stream->network == "xhttp" || stream->network == "splithttp") {
             if (!stream->path.isEmpty()) query.addQueryItem("path", stream->path);
             if (!stream->host.isEmpty()) query.addQueryItem("host", stream->host);
         } else if (stream->network == "grpc") {
@@ -152,7 +153,8 @@ namespace NekoGui_fmt {
             // type
             query.addQueryItem("type", stream->network);
 
-            if (stream->network == "ws" || stream->network == "http" || stream->network == "httpupgrade") {
+            if (stream->network == "ws" || stream->network == "http" || stream->network == "httpupgrade" ||
+                stream->network == "xhttp" || stream->network == "splithttp") {
                 if (!stream->path.isEmpty()) query.addQueryItem("path", stream->path);
                 if (!stream->host.isEmpty()) query.addQueryItem("host", stream->host);
             } else if (stream->network == "grpc") {
