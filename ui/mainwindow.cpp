@@ -372,7 +372,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     });
     set_selected_or_group(2);
     //
-    connect(ui->menu_share_item, &QMenu::aboutToShow, this, [=] {
+    connect(ui->menu_server, &QMenu::aboutToShow, this, [=] {
         QString name;
         auto selected = get_now_selected_list();
         if (!selected.isEmpty()) {

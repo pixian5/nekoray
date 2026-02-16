@@ -598,7 +598,11 @@
     <addaction name="menu_reset_traffic"/>
     <addaction name="menu_delete"/>
     <addaction name="separator"/>
-    <addaction name="menu_share_item"/>
+    <addaction name="menu_qr"/>
+    <addaction name="menu_export_config"/>
+    <addaction name="separator"/>
+    <addaction name="menu_copy_links"/>
+    <addaction name="menu_copy_links_nkr"/>
     <addaction name="separator"/>
     <addaction name="menu_profile_debug_info"/>
     <addaction name="separator"/>
