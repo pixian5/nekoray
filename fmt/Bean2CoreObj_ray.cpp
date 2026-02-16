@@ -47,10 +47,23 @@ namespace NekoGui_fmt {
             streamSettings["httpupgradeSettings"] = httpupgradeSettings;
         } else if (network == "xhttp" || network == "splithttp") {
             QJsonObject xhttpSettings;
-            if (!path.isEmpty()) xhttpSettings["path"] = path;
-            if (!host.isEmpty()) xhttpSettings["host"] = host;
+            auto xhttpPath = path.trimmed();
+            if (xhttpPath.isEmpty()) xhttpPath = "/";
+            xhttpSettings["path"] = xhttpPath;
+
+            auto xhttpHost = host.trimmed();
+            if (xhttpHost.isEmpty()) xhttpHost = sni.trimmed();
+            if (!xhttpHost.isEmpty()) xhttpSettings["host"] = xhttpHost;
+
             if (!xhttp_mode.isEmpty()) xhttpSettings["mode"] = xhttp_mode;
-            if (!xhttp_extra.isEmpty()) xhttpSettings["extra"] = xhttp_extra;
+            if (!xhttp_extra.isEmpty()) {
+                auto extraObj = QString2QJsonObject(xhttp_extra);
+                if (!extraObj.isEmpty()) {
+                    xhttpSettings["extra"] = extraObj;
+                } else {
+                    xhttpSettings["extra"] = xhttp_extra;
+                }
+            }
             streamSettings["xhttpSettings"] = xhttpSettings;
             streamSettings["network"] = "xhttp";
         } else if (network == "tcp") {
