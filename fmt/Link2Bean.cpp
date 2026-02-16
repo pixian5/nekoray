@@ -5,6 +5,46 @@
 
 namespace NekoGui_fmt {
 
+    namespace {
+
+        QString DecodeQueryComponent(const QString &raw) {
+            auto normalized = raw;
+            normalized.replace('+', ' ');
+            return QUrl::fromPercentEncoding(normalized.toUtf8());
+        }
+
+        QString GetRawQueryValue(const QUrl &url, const QStringList &keys) {
+            auto rawQuery = url.query(QUrl::ComponentFormattingOption::FullyEncoded);
+            if (rawQuery.isEmpty()) return {};
+
+            for (const auto &item: rawQuery.split('&')) {
+                if (item.isEmpty()) continue;
+                auto equalIndex = item.indexOf('=');
+                auto rawKey = equalIndex >= 0 ? item.left(equalIndex) : item;
+                auto rawValue = equalIndex >= 0 ? item.mid(equalIndex + 1) : "";
+                auto key = DecodeQueryComponent(rawKey);
+                for (const auto &expectKey: keys) {
+                    if (key.compare(expectKey, Qt::CaseInsensitive) == 0) {
+                        return DecodeQueryComponent(rawValue);
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        QString GetQueryValueAny(const QUrl &url, const QUrlQuery &query, const QStringList &keys, const QString &def = "") {
+            for (const auto &key: keys) {
+                auto value = GetQueryValue(query, key, "");
+                if (!value.isEmpty()) return value;
+            }
+            auto rawValue = GetRawQueryValue(url, keys);
+            if (!rawValue.isEmpty()) return rawValue;
+            return def;
+        }
+
+    } // namespace
+
 #define DECODE_V2RAY_N_1                                                                                                        \
     QString linkN = DecodeB64IfValid(SubStrBefore(SubStrAfter(link, "://"), "#"), QByteArray::Base64Option::Base64UrlEncoding); \
     if (linkN.isEmpty()) return false;                                                                                          \
@@ -91,10 +131,10 @@ namespace NekoGui_fmt {
             stream->path = GetQueryValue(query, "path", "");
             stream->host = GetQueryValue(query, "host", "");
         } else if (stream->network == "xhttp" || stream->network == "splithttp") {
-            stream->path = GetQueryValue(query, "path", "");
-            stream->host = GetQueryValue(query, "host", "");
-            stream->xhttp_mode = GetQueryValue(query, "mode", "");
-            stream->xhttp_extra = GetQueryValue(query, "extra", "");
+            stream->path = GetQueryValueAny(url, query, {"path", "xhttp-path", "xhttp_path", "uri"});
+            stream->host = GetQueryValueAny(url, query, {"host", "authority", "xhttp-host", "xhttp_host"});
+            stream->xhttp_mode = GetQueryValueAny(url, query, {"mode", "xhttp-mode", "xhttp_mode"});
+            stream->xhttp_extra = GetQueryValueAny(url, query, {"extra", "xhttp-extra", "xhttp_extra"});
         } else if (stream->network == "grpc") {
             stream->path = GetQueryValue(query, "serviceName", "");
         } else if (stream->network == "tcp") {
@@ -226,10 +266,10 @@ namespace NekoGui_fmt {
                 stream->path = GetQueryValue(query, "path", "");
                 stream->host = GetQueryValue(query, "host", "");
             } else if (stream->network == "xhttp" || stream->network == "splithttp") {
-                stream->path = GetQueryValue(query, "path", "");
-                stream->host = GetQueryValue(query, "host", "");
-                stream->xhttp_mode = GetQueryValue(query, "mode", "");
-                stream->xhttp_extra = GetQueryValue(query, "extra", "");
+                stream->path = GetQueryValueAny(url, query, {"path", "xhttp-path", "xhttp_path", "uri"});
+                stream->host = GetQueryValueAny(url, query, {"host", "authority", "xhttp-host", "xhttp_host"});
+                stream->xhttp_mode = GetQueryValueAny(url, query, {"mode", "xhttp-mode", "xhttp_mode"});
+                stream->xhttp_extra = GetQueryValueAny(url, query, {"extra", "xhttp-extra", "xhttp_extra"});
             } else if (stream->network == "grpc") {
                 stream->path = GetQueryValue(query, "serviceName", "");
             } else if (stream->network == "tcp") {
