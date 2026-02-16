@@ -93,6 +93,8 @@ namespace NekoGui_fmt {
         } else if (stream->network == "xhttp" || stream->network == "splithttp") {
             stream->path = GetQueryValue(query, "path", "");
             stream->host = GetQueryValue(query, "host", "");
+            stream->xhttp_mode = GetQueryValue(query, "mode", "");
+            stream->xhttp_extra = GetQueryValue(query, "extra", "");
         } else if (stream->network == "grpc") {
             stream->path = GetQueryValue(query, "serviceName", "");
         } else if (stream->network == "tcp") {
@@ -226,6 +228,8 @@ namespace NekoGui_fmt {
             } else if (stream->network == "xhttp" || stream->network == "splithttp") {
                 stream->path = GetQueryValue(query, "path", "");
                 stream->host = GetQueryValue(query, "host", "");
+                stream->xhttp_mode = GetQueryValue(query, "mode", "");
+                stream->xhttp_extra = GetQueryValue(query, "extra", "");
             } else if (stream->network == "grpc") {
                 stream->path = GetQueryValue(query, "serviceName", "");
             } else if (stream->network == "tcp") {

@@ -55,6 +55,10 @@ namespace NekoGui_fmt {
             stream->network == "xhttp" || stream->network == "splithttp") {
             if (!stream->path.isEmpty()) query.addQueryItem("path", stream->path);
             if (!stream->host.isEmpty()) query.addQueryItem("host", stream->host);
+            if (stream->network == "xhttp" || stream->network == "splithttp") {
+                if (!stream->xhttp_mode.isEmpty()) query.addQueryItem("mode", stream->xhttp_mode);
+                if (!stream->xhttp_extra.isEmpty()) query.addQueryItem("extra", stream->xhttp_extra);
+            }
         } else if (stream->network == "grpc") {
             if (!stream->path.isEmpty()) query.addQueryItem("serviceName", stream->path);
         } else if (stream->network == "tcp") {
@@ -157,6 +161,10 @@ namespace NekoGui_fmt {
                 stream->network == "xhttp" || stream->network == "splithttp") {
                 if (!stream->path.isEmpty()) query.addQueryItem("path", stream->path);
                 if (!stream->host.isEmpty()) query.addQueryItem("host", stream->host);
+                if (stream->network == "xhttp" || stream->network == "splithttp") {
+                    if (!stream->xhttp_mode.isEmpty()) query.addQueryItem("mode", stream->xhttp_mode);
+                    if (!stream->xhttp_extra.isEmpty()) query.addQueryItem("extra", stream->xhttp_extra);
+                }
             } else if (stream->network == "grpc") {
                 if (!stream->path.isEmpty()) query.addQueryItem("serviceName", stream->path);
             } else if (stream->network == "tcp") {
