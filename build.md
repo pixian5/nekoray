@@ -15,7 +15,7 @@ bash build.sh
 
 脚本会自动完成：安装依赖包、拉取子模块、编译 Go 后端、编译 C++ GUI、打包所有 DLL。
 
-编译产物在 `dist/nekoray/` 目录，直接运行 `nekobox.exe` 即可。
+编译产物在 `dist/nekoray/` 目录，直接运行 `newbeeplus.exe` 即可。
 
 ## 仅编译 C++ GUI（跳过 Go）
 

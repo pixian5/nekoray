@@ -6,15 +6,15 @@ set -e
 # 用法: 在 MSYS2 MinGW64 终端运行 bash build.sh
 #
 # 功能:
-#   1. 杀掉旧的 nekobox/xray 进程
+#   1. 杀掉旧的 newbeeplus/xray 进程
 #   2. 安装 MSYS2 依赖包
 #   3. 初始化 Git 子模块 + Go 依赖
 #   4. 编译 Go 后端 (nekobox_core.exe, updater.exe)
-#   5. 编译 C++ GUI (nekobox.exe)
+#   5. 编译 C++ GUI (newbeeplus.exe)
 #   6. 复制运行依赖到 build/ (开发调试用)
 #   7. 打包到 dist/nekoray/ (发布用)
 #   8. 自动配置外部核心路径
-#   9. 启动 nekobox
+#   9. 启动 newbeeplus
 # ============================================================
 
 SRC_ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -61,7 +61,7 @@ download_xray() {
     fi
 }
 
-# 写入 xray 路径到 nekobox.json 配置
+# 写入 xray 路径到 newbeeplus.json 配置
 patch_xray_config() {
     local cfg="$1"
     local xray_exe="$2"
@@ -128,7 +128,7 @@ echo "  MSYS2 MinGW64, Go $GO_VER"
 
 echo ""
 echo "=== 结束旧进程 ==="
-taskkill //F //IM nekobox.exe 2>/dev/null && echo "  已结束 nekobox.exe" || true
+taskkill //F //IM newbeeplus.exe 2>/dev/null && echo "  已结束 newbeeplus.exe" || true
 taskkill //F //IM nekobox_core.exe 2>/dev/null && echo "  已结束 nekobox_core.exe" || true
 taskkill //F //IM xray.exe 2>/dev/null && echo "  已结束 xray.exe" || true
 sleep 1
@@ -205,7 +205,7 @@ mkdir -p build/xray_core
 download_xray "build/xray_core"
 
 # 写入 build 目录的 xray 配置
-patch_xray_config "build/config/groups/nekobox.json" "$SRC_ROOT/build/xray_core/xray.exe"
+patch_xray_config "build/config/groups/newbeeplus.json" "$SRC_ROOT/build/xray_core/xray.exe"
 
 # ── Phase 7: 打包到 dist/nekoray/ (发布用) ─────────────────
 
@@ -217,11 +217,11 @@ rm -rf "$DIST"
 mkdir -p "$DIST"
 
 # 复制 GUI
-cp build/nekobox.exe "$DIST/"
+cp build/newbeeplus.exe "$DIST/"
 
 # windeployqt 收集 Qt DLL
 pushd "$DIST" > /dev/null
-windeployqt-qt5.exe nekobox.exe --no-compiler-runtime --no-opengl-sw 2>&1 || true
+windeployqt-qt5.exe newbeeplus.exe --no-compiler-runtime --no-opengl-sw 2>&1 || true
 rm -rf translations
 rm -f libEGL.dll libGLESv2.dll
 popd > /dev/null
@@ -282,7 +282,7 @@ download_xray "$DIST"
 
 echo ""
 echo "=== 配置 dist 外部核心路径 ==="
-patch_xray_config "$DIST/config/groups/nekobox.json" "$DIST/xray.exe"
+patch_xray_config "$DIST/config/groups/newbeeplus.json" "$DIST/xray.exe"
 
 # ── 完成，启动 ────────────────────────────────────────────
 
@@ -291,5 +291,5 @@ echo "=== 编译完成 ==="
 echo "  build 目录: $SRC_ROOT/build/  (开发调试)"
 echo "  dist  目录: $DIST/  (发布打包)"
 echo ""
-echo "启动 nekobox ..."
-"$DIST/nekobox.exe" &
+echo "启动 newbeeplus ..."
+"$DIST/newbeeplus.exe" &

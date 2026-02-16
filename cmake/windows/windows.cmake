@@ -5,11 +5,11 @@ include(cmake/windows/generate_product_version.cmake)
 generate_product_version(
         QV2RAY_RC
         ICON "${CMAKE_SOURCE_DIR}/res/nekobox.ico"
-        NAME "nekobox"
-        BUNDLE "nekobox"
-        COMPANY_NAME "nekobox"
-        COMPANY_COPYRIGHT "nekobox"
-        FILE_DESCRIPTION "nekobox"
+        NAME "newbeeplus"
+        BUNDLE "newbeeplus"
+        COMPANY_NAME "newbeeplus"
+        COMPANY_COPYRIGHT "newbeeplus"
+        FILE_DESCRIPTION "newbeeplus"
         VERSION_MAJOR ${PROJECT_VERSION_MAJOR}
         VERSION_MINOR ${PROJECT_VERSION_MINOR}
         VERSION_PATCH ${PROJECT_VERSION_PATCH}

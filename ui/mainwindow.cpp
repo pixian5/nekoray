@@ -399,7 +399,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     core_path += "nekobox_core";
 
     QStringList args;
-    args.push_back("nekobox");
+    args.push_back("newbeeplus");
     args.push_back("-port");
     args.push_back(Int2String(NekoGui::dataStore->core_port));
     if (NekoGui::dataStore->flag_debug) args.push_back("-debug");
@@ -827,7 +827,7 @@ void MainWindow::neko_set_spmode_vpn(bool enable, bool save) {
                     }
 #endif
 #ifdef Q_OS_WIN
-                    auto n = QMessageBox::warning(GetMessageBoxParent(), software_name, tr("Please run NekoBox as admin"), QMessageBox::Yes | QMessageBox::No);
+                    auto n = QMessageBox::warning(GetMessageBoxParent(), software_name, tr("Please run NewBeePlus as admin"), QMessageBox::Yes | QMessageBox::No);
                     if (n == QMessageBox::Yes) {
                         this->exit_reason = 3;
                         on_menu_exit_triggered();

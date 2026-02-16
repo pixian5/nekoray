@@ -8,6 +8,9 @@ cp -r linux64 nekoray/opt/
 mv nekoray/opt/linux64 nekoray/opt/nekoray
 rm -rf nekoray/opt/nekoray/usr
 rm nekoray/opt/nekoray/launcher
+if [ -f nekoray/opt/nekoray/nekobox.png ] && [ ! -f nekoray/opt/nekoray/newbeeplus.png ]; then
+    cp nekoray/opt/nekoray/nekobox.png nekoray/opt/nekoray/newbeeplus.png
+fi
 
 # basic
 cat >nekoray/DEBIAN/control <<-EOF
@@ -25,8 +28,8 @@ if [ ! -s /usr/share/applications/nekoray.desktop ]; then
 [Desktop Entry]
 Name=nekoray
 Comment=Qt based cross-platform GUI proxy configuration manager (backend: sing-box)
-Exec=sh -c "PATH=/opt/nekoray:\$PATH /opt/nekoray/nekobox -appdata"
-Icon=/opt/nekoray/nekobox.png
+Exec=sh -c "PATH=/opt/nekoray:\$PATH /opt/nekoray/newbeeplus -appdata"
+Icon=/opt/nekoray/newbeeplus.png
 Terminal=false
 Type=Application
 Categories=Network;Application;

@@ -1,4 +1,4 @@
-# NekoBox For PC
+# NewBeePlus For PC
 
 Qt based cross-platform GUI proxy configuration manager (backend: sing-box)
 

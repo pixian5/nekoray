@@ -72,7 +72,7 @@ func Updater() {
 	os.RemoveAll("./nekoray.zip")
 	os.RemoveAll("./nekoray.tar.gz")
 
-	// nekoray -> nekobox
+	// legacy cleanup
 	os.Remove("./nekoray.exe")
 	os.Remove("./nekoray.png")
 	os.Remove("./nekoray_core.exe")

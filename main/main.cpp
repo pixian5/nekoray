@@ -49,7 +49,7 @@ void loadTranslate(const QString& locale) {
     }
 }
 
-#define LOCAL_SERVER_PREFIX "nekoraylocalserver-"
+#define LOCAL_SERVER_PREFIX "newbeepluslocalserver-"
 
 int main(int argc, char* argv[]) {
     // Core dump
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
     // dirs & clean
     auto wd = QDir(QApplication::applicationDirPath());
     if (NekoGui::dataStore->flag_use_appdata) {
-        QApplication::setApplicationName("nekoray");
+        QApplication::setApplicationName("newbeeplus");
         if (!NekoGui::dataStore->appdataDir.isEmpty()) {
             wd.setPath(NekoGui::dataStore->appdataDir);
         } else {
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     DS_cores->start();
 
     // RunGuard
-    RunGuard guard("nekoray" + wd.absolutePath());
+    RunGuard guard("newbeeplus" + wd.absolutePath());
     quint64 guard_data_in = GetRandomUint64();
     quint64 guard_data_out = 0;
     if (!NekoGui::dataStore->flag_many && !guard.tryToRun(&guard_data_in)) {
@@ -179,8 +179,16 @@ int main(int argc, char* argv[]) {
     }
 
     // Load dataStore
-    NekoGui::dataStore->fn = "groups/nekobox.json";
+    NekoGui::dataStore->fn = "groups/newbeeplus.json";
     auto isLoaded = NekoGui::dataStore->Load();
+    if (!isLoaded && QFile::exists("groups/nekobox.json")) {
+        NekoGui::dataStore->fn = "groups/nekobox.json";
+        isLoaded = NekoGui::dataStore->Load();
+        if (isLoaded) {
+            NekoGui::dataStore->fn = "groups/newbeeplus.json";
+            NekoGui::dataStore->Save();
+        }
+    }
 
     // Apply persisted core type
     if (NekoGui::dataStore->core_type == 1) {

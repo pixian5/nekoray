@@ -306,7 +306,7 @@ namespace NekoGui {
         if (isDefault) {
             QString version = SubStrBefore(NKR_VERSION, "-");
             if (!version.contains(".")) version = "2.0";
-            return "NekoBox/PC/" + version + " (Prefer ClashMeta Format)";
+            return "NewBeePlus/PC/" + version + " (Prefer ClashMeta Format)";
         }
         return user_agent;
     }
@@ -434,8 +434,8 @@ namespace NekoGui {
         search << "/usr/share/sing-geoip";
         search << "/usr/share/sing-geosite";
         search << "/usr/share/sing-box";
-        search << "/usr/lib/nekobox";
-        search << "/usr/share/nekobox";
+        search << "/usr/lib/newbeeplus";
+        search << "/usr/share/newbeeplus";
         for (const auto &dir: search) {
             if (dir.isEmpty()) continue;
             QFileInfo asset(dir + "/" + name);

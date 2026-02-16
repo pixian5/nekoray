@@ -22,9 +22,9 @@ cmake -GNinja ..
 ninja
 ```
 
-编译完成后得到 `nekobox`
+编译完成后得到 `newbeeplus`
 
-解压 Release 的压缩包，替换其中的 `nekobox`，删除 `launcher` 即可使用。
+解压 Release 的压缩包，替换其中的 `newbeeplus`，删除 `launcher` 即可使用。
 
 ## 复杂编译法
 
@@ -69,7 +69,7 @@ cmake -GNinja ..
 ninja
 ```
 
-编译完成后得到 `nekobox`
+编译完成后得到 `newbeeplus`
 
 ### Go 部分编译
 

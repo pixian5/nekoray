@@ -105,9 +105,9 @@ jobs:
           source libs/env_deploy.sh
           DEST=$DEPLOYMENT/windows64
           mkdir -p $DEST
-          cp build/nekobox.exe $DEST/
+          cp build/newbeeplus.exe $DEST/
           cd $DEST
-          windeployqt-qt5.exe nekobox.exe --no-compiler-runtime --no-opengl-sw || true
+          windeployqt-qt5.exe newbeeplus.exe --no-compiler-runtime --no-opengl-sw || true
           rm -rf translations
           rm -f libEGL.dll libGLESv2.dll
           # Qt plugins
@@ -210,7 +210,7 @@ jobs:
           cd deployment
           cp -r public_res/* linux64 2>/dev/null || true
           bash ../libs/package_appimage.sh
-          mv nekobox-x86_64.AppImage $version_standalone-linux-x64.AppImage
+          mv newbeeplus-x86_64.AppImage $version_standalone-linux-x64.AppImage
       - name: Clean Up
         run: |
           cd deployment

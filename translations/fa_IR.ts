@@ -762,7 +762,7 @@ https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
     </message>
     <message>
         <source>Add a tun inbound to the profile startup, instead of using two processes.
-This needs to be run NekoBox with administrator privileges.</source>
+This needs to be run NewBeePlus with administrator privileges.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1465,10 +1465,6 @@ End: %2</source>
         <translation type="unfinished">تنظیمات تغییر کرد</translation>
     </message>
     <message>
-        <source>Please run NekoBox as admin</source>
-        <translation type="unfinished">لطفا Nekobox را با مجوز ادمین اجرا کنید</translation>
-    </message>
-    <message>
         <source>Restart Proxy</source>
         <translation type="unfinished">راه اندازی مجدد پروکسی</translation>
     </message>
@@ -1550,6 +1546,10 @@ End: %2</source>
     </message>
     <message>
         <source>快捷键：Ctrl键+R</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please run NewBeePlus as admin</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
