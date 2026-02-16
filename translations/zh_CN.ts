@@ -1496,7 +1496,7 @@ Split by line.</source>
     </message>
     <message>
         <source>URL Test</source>
-        <translation>URL 测试</translation>
+        <translation>测试延迟</translation>
     </message>
     <message>
         <source>[%1] test error: external core socks5 port not ready: %2</source>
