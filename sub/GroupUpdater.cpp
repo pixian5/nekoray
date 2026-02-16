@@ -6,7 +6,12 @@
 #include "GroupUpdater.hpp"
 
 #include <QInputDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSet>
 #include <QUrlQuery>
+#include <limits>
 
 #ifndef NKR_NO_YAML
 
@@ -193,6 +198,61 @@ namespace NekoGui_sub {
         }
     }
 
+    QString NodeFirstStringByKeys(const YAML::Node &n, const std::list<std::string> &keys, const QString &def = "") {
+        for (const auto &key: keys) {
+            auto value = NodeFirstString(n[key]);
+            if (!value.isEmpty()) return value;
+        }
+        return def;
+    }
+
+    QJsonValue YamlNodeToQJsonValue(const YAML::Node &n) {
+        try {
+            if (!n.IsDefined() || n.IsNull()) return {};
+            if (n.IsMap()) {
+                QJsonObject obj;
+                for (auto item: n) {
+                    auto key = Node2QString(item.first).trimmed();
+                    if (key.isEmpty()) continue;
+                    auto value = YamlNodeToQJsonValue(item.second);
+                    if (!value.isUndefined()) obj.insert(key, value);
+                }
+                return obj;
+            }
+            if (n.IsSequence()) {
+                QJsonArray arr;
+                for (auto item: n) {
+                    auto value = YamlNodeToQJsonValue(item);
+                    if (!value.isUndefined()) arr.append(value);
+                }
+                return arr;
+            }
+
+            auto scalar = QString::fromStdString(n.Scalar());
+            auto lower = scalar.toLower();
+            if (lower == "true") return true;
+            if (lower == "false") return false;
+
+            bool intOk = false;
+            auto i = scalar.toLongLong(&intOk);
+            if (intOk) {
+                if (i >= std::numeric_limits<int>::min() && i <= std::numeric_limits<int>::max()) {
+                    return static_cast<int>(i);
+                }
+                return scalar;
+            }
+
+            bool doubleOk = false;
+            auto d = scalar.toDouble(&doubleOk);
+            if (doubleOk) return d;
+
+            return scalar;
+        } catch (const YAML::Exception &ex) {
+            qDebug() << ex.what();
+            return {};
+        }
+    }
+
     YAML::Node NodeChild(const YAML::Node &n, const std::list<std::string> &keys);
 
     void ParseXHTTPOptions(const YAML::Node &proxy, const NekoGui_fmt::V2rayStreamSettings *streamConst) {
@@ -200,8 +260,20 @@ namespace NekoGui_sub {
         if (stream == nullptr) return;
         if (!(stream->network == "xhttp" || stream->network == "splithttp")) return;
 
-        auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
-        auto http = NodeChild(proxy, {"http-opts", "http-opt"});
+        auto xhttp = NodeChild(proxy, {
+                                      "xhttp-opts",
+                                      "xhttp-opt",
+                                      "splithttp-opts",
+                                      "splithttp-opt",
+                                      "xhttp_opts",
+                                      "splithttp_opts",
+                                      "xhttpOpts",
+                                      "splitHttpOpts",
+                                      "splithttpOpts",
+                                      "xhttp",
+                                  });
+        auto http = NodeChild(proxy, {"http-opts", "http-opt", "http_opts", "httpOpts"});
+        auto transport = NodeChild(proxy, {"transport", "transport-opts", "transport-opt", "transport_opts"});
 
         auto hostFromHeaders = [&](const YAML::Node &n) {
             if (!n.IsMap()) return QString{};
@@ -216,22 +288,54 @@ namespace NekoGui_sub {
         };
 
         if (stream->path.isEmpty()) {
-            stream->path = NodeFirstString(xhttp["path"]);
-            if (stream->path.isEmpty()) stream->path = NodeFirstString(http["path"]);
-            if (stream->path.isEmpty()) stream->path = NodeFirstString(proxy["path"]);
+            stream->path = NodeFirstStringByKeys(xhttp, {"path", "paths", "xhttp-path", "xhttp_path", "uri"});
+            if (stream->path.isEmpty()) stream->path = NodeFirstStringByKeys(transport, {"path", "paths", "xhttp-path", "xhttp_path", "uri"});
+            if (stream->path.isEmpty()) stream->path = NodeFirstStringByKeys(http, {"path", "paths", "uri"});
+            if (stream->path.isEmpty()) stream->path = NodeFirstStringByKeys(proxy, {"path", "paths", "xhttp-path", "xhttp_path", "uri"});
         }
 
         if (stream->host.isEmpty()) {
-            stream->host = NodeFirstString(xhttp["host"]);
+            stream->host = NodeFirstStringByKeys(xhttp, {"host", "authority", "xhttp-host", "xhttp_host", "serverName", "servername"});
             if (stream->host.isEmpty()) stream->host = hostFromHeaders(xhttp);
-            if (stream->host.isEmpty()) stream->host = NodeFirstString(http["host"]);
+            if (stream->host.isEmpty()) stream->host = NodeFirstStringByKeys(transport, {"host", "authority", "xhttp-host", "xhttp_host"});
+            if (stream->host.isEmpty()) stream->host = hostFromHeaders(transport);
+            if (stream->host.isEmpty()) stream->host = NodeFirstStringByKeys(http, {"host", "authority"});
             if (stream->host.isEmpty()) stream->host = hostFromHeaders(http);
-            if (stream->host.isEmpty()) stream->host = NodeFirstString(proxy["host"]);
+            if (stream->host.isEmpty()) stream->host = NodeFirstStringByKeys(proxy, {"host", "authority", "xhttp-host", "xhttp_host"});
         }
 
         if (stream->xhttp_mode.isEmpty()) {
-            stream->xhttp_mode = Node2QString(xhttp["mode"]);
-            if (stream->xhttp_mode.isEmpty()) stream->xhttp_mode = Node2QString(proxy["mode"]);
+            stream->xhttp_mode = NodeFirstStringByKeys(xhttp, {"mode", "xhttp-mode", "xhttp_mode"});
+            if (stream->xhttp_mode.isEmpty()) stream->xhttp_mode = NodeFirstStringByKeys(transport, {"mode", "xhttp-mode", "xhttp_mode"});
+            if (stream->xhttp_mode.isEmpty()) stream->xhttp_mode = NodeFirstStringByKeys(proxy, {"mode", "xhttp-mode", "xhttp_mode"});
+        }
+
+        if (stream->xhttp_extra.isEmpty() && xhttp.IsMap()) {
+            static const QSet<QString> skipKeys = {
+                "path",
+                "paths",
+                "host",
+                "headers",
+                "mode",
+                "uri",
+                "authority",
+                "xhttp-path",
+                "xhttp_path",
+                "xhttp-host",
+                "xhttp_host",
+                "xhttp-mode",
+                "xhttp_mode",
+            };
+            QJsonObject extraObj;
+            for (auto item: xhttp) {
+                auto key = Node2QString(item.first).trimmed();
+                if (key.isEmpty() || skipKeys.contains(key)) continue;
+                auto value = YamlNodeToQJsonValue(item.second);
+                if (!value.isUndefined()) extraObj.insert(key, value);
+            }
+            if (!extraObj.isEmpty()) {
+                stream->xhttp_extra = QJsonObject2QString(extraObj, true);
+            }
         }
     }
 
@@ -390,6 +494,7 @@ namespace NekoGui_sub {
                     if (reality.IsMap()) {
                         bean->stream->reality_pbk = Node2QString(reality["public-key"]);
                         bean->stream->reality_sid = Node2QString(reality["short-id"]);
+                        bean->stream->reality_spx = FIRST_OR_SECOND(Node2QString(reality["spider-x"]), Node2QString(reality["spiderX"]));
                     }
                 } else if (type == "vmess") {
                     needFix = true;
