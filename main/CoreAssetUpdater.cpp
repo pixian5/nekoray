@@ -170,51 +170,12 @@ namespace NekoGui_update {
 #endif
         }
 
-        QString app_binary_path(const QString &name) {
-            return QDir::cleanPath(QApplication::applicationDirPath() + "/" + name + current_binary_suffix());
-        }
-
         QString resolve_singbox_target_path() {
-            auto coreMap = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
-            auto configuredPath = coreMap.value("sing-box").toString().trimmed();
-            if (!configuredPath.isEmpty()) {
-                QFileInfo fi(configuredPath);
-                if (fi.isRelative()) {
-                    configuredPath = QDir::cleanPath(QApplication::applicationDirPath() + "/" + configuredPath);
-                }
-                return configuredPath;
-            }
-
-            auto coreCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/core/sing-box" + current_binary_suffix());
-            if (QFile::exists(coreCandidate)) return coreCandidate;
-
-            auto appCandidate = app_binary_path("sing-box");
-            if (QFile::exists(appCandidate)) return appCandidate;
-
-            return coreCandidate;
+            return QDir::cleanPath(QApplication::applicationDirPath() + "/core/sing-box" + current_binary_suffix());
         }
 
         QString resolve_xray_target_path() {
-            auto coreMap = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
-            auto configuredPath = coreMap.value("xray").toString().trimmed();
-            if (!configuredPath.isEmpty()) {
-                QFileInfo fi(configuredPath);
-                if (fi.isRelative()) {
-                    configuredPath = QDir::cleanPath(QApplication::applicationDirPath() + "/" + configuredPath);
-                }
-                return configuredPath;
-            }
-
-            auto coreCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/core/xray" + current_binary_suffix());
-            if (QFile::exists(coreCandidate)) return coreCandidate;
-
-            auto legacyCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/xray_core/xray" + current_binary_suffix());
-            if (QFile::exists(legacyCandidate)) return legacyCandidate;
-
-            auto appCandidate = app_binary_path("xray");
-            if (QFile::exists(appCandidate)) return appCandidate;
-
-            return coreCandidate;
+            return QDir::cleanPath(QApplication::applicationDirPath() + "/core/xray" + current_binary_suffix());
         }
 
         QJsonObject fetch_latest_release(const QString &apiUrl, QString &error) {
@@ -472,10 +433,12 @@ namespace NekoGui_update {
             if (lowerName.endsWith(".zip") || lowerName.endsWith(".tar.gz") || lowerName.endsWith(".tgz")) {
                 QString extractError;
                 if (!extract_archive(archivePath, tempDir.path(), extractError)) {
+                    QFile::remove(archivePath);
                     append_log(report, QString("Error: %1 extract failed: %2").arg(ctx.displayName, extractError), interactive);
                     report.hasError = true;
                     return;
                 }
+                QFile::remove(archivePath);
                 extractedBinaryPath = find_file_recursive(tempDir.path(), ctx.binaryName);
             } else {
                 extractedBinaryPath = archivePath;

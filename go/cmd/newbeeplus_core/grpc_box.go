@@ -22,12 +22,7 @@ import (
 	"grpc_server/gen"
 
 	"github.com/matsuridayo/libneko/neko_common"
-	"github.com/matsuridayo/libneko/neko_log"
 	"github.com/matsuridayo/libneko/speedtest"
-	box "github.com/sagernet/sing-box"
-	"github.com/sagernet/sing-box/boxapi"
-	boxmain "github.com/sagernet/sing-box/cmd/sing-box"
-	"github.com/sagernet/sing-box/option"
 	"golang.org/x/net/proxy"
 )
 
@@ -39,7 +34,6 @@ type coreRunMode int
 
 const (
 	coreModeNone coreRunMode = iota
-	coreModeEmbedded
 	coreModeExternal
 )
 
@@ -345,6 +339,38 @@ func startExternalRuntimeLocked(coreConfig string) error {
 	return nil
 }
 
+func createRuntimeHttpClient() (*http.Client, error) {
+	coreStateMu.Lock()
+	runtimeMode := runMode
+	runtimeSocksPort := externalSocksPort
+	coreStateMu.Unlock()
+
+	if runtimeMode != coreModeExternal || runtimeSocksPort <= 0 {
+		return nil, errors.New("instance not started")
+	}
+	return createSocks5HttpClient(runtimeSocksPort)
+}
+
+func createTempExternalHttpClient(coreConfig string, logTag string) (*http.Client, func(), error) {
+	testConfig, testPort, prepErr := ensureTestSocksInbound(coreConfig)
+	if prepErr != nil {
+		return nil, nil, prepErr
+	}
+	cmd, cancel, configPath, startedPort, startErr := startExternalSingBoxProcess(testConfig, testPort, logTag)
+	if startErr != nil {
+		return nil, nil, startErr
+	}
+	httpClient, httpErr := createSocks5HttpClient(startedPort)
+	if httpErr != nil {
+		stopExternalProcess(cmd, cancel, configPath)
+		return nil, nil, httpErr
+	}
+	cleanup := func() {
+		stopExternalProcess(cmd, cancel, configPath)
+	}
+	return httpClient, cleanup, nil
+}
+
 func (s *server) Start(ctx context.Context, in *gen.LoadConfigReq) (out *gen.ErrorResp, _ error) {
 	var err error
 
@@ -352,7 +378,6 @@ func (s *server) Start(ctx context.Context, in *gen.LoadConfigReq) (out *gen.Err
 		out = &gen.ErrorResp{}
 		if err != nil {
 			out.Error = err.Error()
-			instance = nil
 		}
 	}()
 
@@ -363,41 +388,12 @@ func (s *server) Start(ctx context.Context, in *gen.LoadConfigReq) (out *gen.Err
 	coreStateMu.Lock()
 	defer coreStateMu.Unlock()
 
-	if runMode != coreModeNone || instance != nil || externalProcess != nil {
+	if runMode != coreModeNone || externalProcess != nil {
 		err = errors.New("instance already started")
 		return
 	}
 
-	if singBoxExternalPreferred() {
-		if startErr := startExternalRuntimeLocked(in.CoreConfig); startErr == nil {
-			return
-		} else if singBoxExternalRequired() {
-			err = startErr
-			return
-		} else {
-			log.Printf("[sing-box-ext] start failed, fallback to embedded: %v", startErr)
-		}
-	}
-
-	instance, instance_cancel, err = boxmain.Create([]byte(in.CoreConfig))
-	if err != nil {
-		return
-	}
-
-	runMode = coreModeEmbedded
-
-	if instance != nil {
-		// Logger
-		instance.SetLogWritter(neko_log.LogWriter)
-		// V2ray Service
-		if in.StatsOutbounds != nil {
-			instance.Router().SetV2RayServer(boxapi.NewSbV2rayServer(option.V2RayStatsServiceOptions{
-				Enabled:   true,
-				Outbounds: in.StatsOutbounds,
-			}))
-		}
-	}
-
+	err = startExternalRuntimeLocked(in.CoreConfig)
 	return
 }
 
@@ -416,19 +412,9 @@ func (s *server) Stop(ctx context.Context, in *gen.EmptyReq) (out *gen.ErrorResp
 
 	if runMode == coreModeExternal {
 		stopExternalRuntimeLocked()
-		return
 	}
 
-	if instance == nil {
-		runMode = coreModeNone
-		return
-	}
-
-	instance_cancel()
-	instance.Close()
-	instance = nil
 	runMode = coreModeNone
-
 	return
 }
 
@@ -452,85 +438,32 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 	}()
 
 	if in.Mode == gen.TestMode_UrlTest {
-		// External core shortcut: use provided SOCKS5 port directly.
+		var httpClient *http.Client
+
 		if in.Config != nil {
 			if port, ok := parseExternalSocksConfig(in.Config.CoreConfig); ok {
-				log.Printf("[Test] External core detected, using SOCKS5 on port %d", port)
-				httpClient, err2 := createSocks5HttpClient(port)
-				if err2 != nil {
-					err = err2
+				httpClient, err = createSocks5HttpClient(port)
+				if err != nil {
 					return
 				}
+			} else {
+				httpClient, cleanup, prepErr := createTempExternalHttpClient(in.Config.CoreConfig, "sing-box-test")
+				if prepErr != nil {
+					err = prepErr
+					return
+				}
+				defer cleanup()
 				out.Ms, err = speedtest.UrlTest(httpClient, in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
 				return
 			}
-		}
-
-		// Preferred: external sing-box temp instance for per-node tests.
-		if in.Config != nil && singBoxExternalPreferred() {
-			testConfig, testPort, prepErr := ensureTestSocksInbound(in.Config.CoreConfig)
-			if prepErr == nil {
-				cmd, cancel, configPath, startedPort, startErr := startExternalSingBoxProcess(testConfig, testPort, "sing-box-test")
-				if startErr == nil {
-					defer stopExternalProcess(cmd, cancel, configPath)
-					httpClient, httpErr := createSocks5HttpClient(startedPort)
-					if httpErr != nil {
-						err = httpErr
-						return
-					}
-					out.Ms, err = speedtest.UrlTest(httpClient, in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
-					return
-				}
-				prepErr = startErr
-			}
-			if singBoxExternalRequired() {
-				err = prepErr
-				return
-			}
-			log.Printf("[Test] external sing-box test failed, fallback to embedded: %v", prepErr)
-		}
-
-		// Running instance url-test: external runtime uses its local socks port.
-		coreStateMu.Lock()
-		runtimeMode := runMode
-		runtimeSocksPort := externalSocksPort
-		runtimeInstance := instance
-		coreStateMu.Unlock()
-
-		if in.Config == nil && runtimeMode == coreModeExternal {
-			if runtimeSocksPort <= 0 {
-				err = errors.New("external runtime socks port unavailable")
-				return
-			}
-			httpClient, err2 := createSocks5HttpClient(runtimeSocksPort)
-			if err2 != nil {
-				err = err2
-				return
-			}
-			out.Ms, err = speedtest.UrlTest(httpClient, in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
-			return
-		}
-
-		// Fallback: embedded instance (running or temp).
-		var i *box.Box
-		var cancel context.CancelFunc
-		if in.Config != nil {
-			i, cancel, err = boxmain.Create([]byte(in.Config.CoreConfig))
-			if i != nil {
-				defer i.Close()
-				defer cancel()
-			}
+		} else {
+			httpClient, err = createRuntimeHttpClient()
 			if err != nil {
 				return
 			}
-		} else {
-			i = runtimeInstance
-			if i == nil {
-				err = errors.New("instance not started")
-				return
-			}
 		}
-		out.Ms, err = speedtest.UrlTest(boxapi.CreateProxyHttpClient(i), in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
+
+		out.Ms, err = speedtest.UrlTest(httpClient, in.Url, in.Timeout, speedtest.UrlTestStandard_RTT)
 		return
 	}
 
@@ -540,83 +473,31 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 	}
 
 	if in.Mode == gen.TestMode_FullTest {
-		// External core shortcut: use provided SOCKS5 port directly.
+		var httpClient *http.Client
+
 		if in.Config != nil {
 			if port, ok := parseExternalSocksConfig(in.Config.CoreConfig); ok {
-				httpClient, err2 := createSocks5HttpClient(port)
-				if err2 != nil {
-					err = err2
+				httpClient, err = createSocks5HttpClient(port)
+				if err != nil {
 					return
 				}
+			} else {
+				httpClient, cleanup, prepErr := createTempExternalHttpClient(in.Config.CoreConfig, "sing-box-full-test")
+				if prepErr != nil {
+					err = prepErr
+					return
+				}
+				defer cleanup()
 				return grpc_server.DoFullTestWithHttpClient(ctx, in, httpClient)
 			}
-		}
-
-		// Preferred: external sing-box temp instance for per-node full test.
-		if in.Config != nil && singBoxExternalPreferred() {
-			testConfig, testPort, prepErr := ensureTestSocksInbound(in.Config.CoreConfig)
-			if prepErr == nil {
-				cmd, cancel, configPath, startedPort, startErr := startExternalSingBoxProcess(testConfig, testPort, "sing-box-full-test")
-				if startErr == nil {
-					defer stopExternalProcess(cmd, cancel, configPath)
-					httpClient, httpErr := createSocks5HttpClient(startedPort)
-					if httpErr != nil {
-						err = httpErr
-						return
-					}
-					return grpc_server.DoFullTestWithHttpClient(ctx, in, httpClient)
-				}
-				prepErr = startErr
-			}
-			if singBoxExternalRequired() {
-				err = prepErr
-				return
-			}
-			log.Printf("[Test] external sing-box full-test failed, fallback to embedded: %v", prepErr)
-		}
-
-		coreStateMu.Lock()
-		runtimeMode := runMode
-		runtimeSocksPort := externalSocksPort
-		runtimeInstance := instance
-		coreStateMu.Unlock()
-
-		if in.Config == nil && runtimeMode == coreModeExternal {
-			if runtimeSocksPort <= 0 {
-				err = errors.New("external runtime socks port unavailable")
-				return
-			}
-			httpClient, err2 := createSocks5HttpClient(runtimeSocksPort)
-			if err2 != nil {
-				err = err2
-				return
-			}
-			return grpc_server.DoFullTestWithHttpClient(ctx, in, httpClient)
-		}
-
-		var (
-			i         *box.Box
-			cancel    context.CancelFunc
-			createErr error
-		)
-		if in.Config == nil {
-			i = runtimeInstance
 		} else {
-			i, cancel, createErr = boxmain.Create([]byte(in.Config.CoreConfig))
+			httpClient, err = createRuntimeHttpClient()
+			if err != nil {
+				return
+			}
 		}
-		if i != nil && cancel != nil {
-			defer i.Close()
-			defer cancel()
-		}
-		if createErr != nil {
-			err = createErr
-			return
-		}
-		if i == nil {
-			err = errors.New("instance not started")
-			return
-		}
-		return grpc_server.DoFullTest(ctx, in, i)
+
+		return grpc_server.DoFullTestWithHttpClient(ctx, in, httpClient)
 	}
 
 	return
@@ -624,18 +505,7 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 
 func (s *server) QueryStats(ctx context.Context, in *gen.QueryStatsReq) (out *gen.QueryStatsResp, _ error) {
 	out = &gen.QueryStatsResp{}
-
-	coreStateMu.Lock()
-	defer coreStateMu.Unlock()
-	if runMode != coreModeEmbedded || instance == nil {
-		return out, nil
-	}
-
-	if ss, ok := instance.Router().V2RayServer().(*boxapi.SbV2rayServer); ok {
-		out.Traffic = ss.QueryStats(fmt.Sprintf("outbound>>>%s>>>traffic>>>%s", in.Tag, in.Direct))
-	}
-
-	return
+	return out, nil
 }
 
 func (s *server) ListConnections(ctx context.Context, in *gen.EmptyReq) (*gen.ListConnectionsResp, error) {

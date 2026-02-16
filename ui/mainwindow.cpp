@@ -410,7 +410,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     runOnUiThread(
         [=] {
             core_process = new NekoGui_sys::CoreProcess(core_path, args);
-            core_process->env << "NEKOBOX_SINGBOX_MODE=external-prefer";
+            core_process->env << "NEKOBOX_SINGBOX_MODE=external-only";
             auto singBoxPath = NekoGui::dataStore->extraCore->Get("sing-box");
             if (!singBoxPath.trimmed().isEmpty()) {
                 core_process->env << ("NEKOBOX_SINGBOX_PATH=" + singBoxPath);

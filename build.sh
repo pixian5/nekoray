@@ -61,6 +61,42 @@ download_xray() {
     fi
 }
 
+download_singbox() {
+    local dest="$1"
+    if [ -f "$dest/sing-box.exe" ]; then
+        return
+    fi
+
+    echo "  Download sing-box -> $dest/"
+    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
+    local ver
+    ver=$(curl -fLs "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
+    if [ -n "$ver" ]; then
+        local tmp_dir
+        tmp_dir="/tmp/sing-box-${ver}-$$"
+        rm -rf "$tmp_dir"
+        mkdir -p "$tmp_dir"
+        curl -fLo /tmp/sing-box.tar.gz \
+            "https://github.com/SagerNet/sing-box/releases/download/${ver}/sing-box-${ver#v}-windows-amd64.tar.gz" \
+            && tar -xzf /tmp/sing-box.tar.gz -C "$tmp_dir" --wildcards '*/sing-box.exe' \
+            && find "$tmp_dir" -name 'sing-box.exe' -exec cp {} "$dest/sing-box.exe" \; \
+            && echo "  sing-box $ver -> $dest/sing-box.exe" \
+            || echo "  Warning: failed to download sing-box tar.gz, trying zip..."
+        if [ ! -f "$dest/sing-box.exe" ]; then
+            curl -fLo /tmp/sing-box.zip \
+                "https://github.com/SagerNet/sing-box/releases/download/${ver}/sing-box-${ver#v}-windows-amd64.zip" \
+                && unzip -o /tmp/sing-box.zip '*/sing-box.exe' -d "$tmp_dir" \
+                && find "$tmp_dir" -name 'sing-box.exe' -exec cp {} "$dest/sing-box.exe" \; \
+                && echo "  sing-box $ver -> $dest/sing-box.exe" \
+                || echo "  Warning: failed to download sing-box zip"
+        fi
+        rm -rf "$tmp_dir"
+    else
+        echo "  Warning: failed to fetch sing-box version"
+    fi
+    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
+}
+
 # 鍐欏叆 xray 璺緞鍒?newbeeplus.json 閰嶇疆
 patch_xray_config() {
     local cfg="$1"
@@ -203,6 +239,7 @@ download_geodata "build"
 
 # 涓嬭浇 Xray 鍒?build/core/
 download_xray "build/core"
+download_singbox "build/core"
 
 # 鍐欏叆 build 鐩綍鐨?xray 閰嶇疆
 patch_xray_config "build/config/groups/newbeeplus.json" "$SRC_ROOT/build/core/xray.exe"
@@ -251,35 +288,8 @@ download_geodata "$DIST"
 echo ""
 echo "=== 涓嬭浇浠ｇ悊鏍稿績 (dist) ==="
 
-# sing-box (newbeeplus_core)
-if [ ! -f "$DIST/core/newbeeplus_core.exe" ]; then
-    echo "  涓嬭浇 sing-box (newbeeplus_core) ..."
-    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
-    SINGBOX_VER=$(curl -fLs "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
-    if [ -n "$SINGBOX_VER" ]; then
-        SINGBOX_TMP_DIR="/tmp/sing-box-${SINGBOX_VER}-$$"
-        rm -rf "$SINGBOX_TMP_DIR"
-        mkdir -p "$SINGBOX_TMP_DIR"
-        curl -fLo /tmp/sing-box.tar.gz \
-            "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.tar.gz" \
-            && tar -xzf /tmp/sing-box.tar.gz -C "$SINGBOX_TMP_DIR" --wildcards '*/sing-box.exe' \
-            && find "$SINGBOX_TMP_DIR" -name 'sing-box.exe' -exec cp {} "$DIST/core/newbeeplus_core.exe" \; \
-            && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
-            || echo "  璀﹀憡: 涓嬭浇 sing-box 澶辫触锛屽皾璇?zip 鏍煎紡 ..."
-        if [ ! -f "$DIST/core/newbeeplus_core.exe" ]; then
-            curl -fLo /tmp/sing-box.zip \
-                "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.zip" \
-                && unzip -o /tmp/sing-box.zip '*/sing-box.exe' -d "$SINGBOX_TMP_DIR" \
-                && find "$SINGBOX_TMP_DIR" -name 'sing-box.exe' -exec cp {} "$DIST/core/newbeeplus_core.exe" \; \
-                && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
-                || echo "  璀﹀憡: 涓嬭浇 sing-box 澶辫触"
-        fi
-        rm -rf "$SINGBOX_TMP_DIR"
-    else
-        echo "  Warning: failed to fetch sing-box version"
-    fi
-    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
-fi
+# sing-box
+download_singbox "$DIST/core"
 
 # Xray
 download_xray "$DIST/core"
