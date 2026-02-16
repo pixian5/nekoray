@@ -46,7 +46,6 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QRegularExpression>
 #include <QDir>
 #include <QFileInfo>
 
@@ -1569,25 +1568,43 @@ void MainWindow::show_log_impl(const QString &log) {
     NekoGui::dataStore->routing->Save();
 
 void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &pos) {
-    QMenu *menu = ui->masterLogBrowser->createStandardContextMenu();
-    // Keep Ctrl+C for copy, but remove mnemonic C binding from context-menu Copy action.
-    for (auto action: menu->actions()) {
-        if (action == nullptr) continue;
-        if (action->shortcut().matches(QKeySequence::Copy) == QKeySequence::ExactMatch) {
-            auto text = action->text();
-            text.remove(QRegularExpression(R"(\s*\(&?[A-Za-z]\))"));
-            text.remove(QRegularExpression(R"(\s*\([A-Za-z]\))"));
-            text.remove('&');
-            action->setText(text);
-            break;
-        }
+    QMenu menu(ui->masterLogBrowser);
+    auto action_copy = new QAction(&menu);
+    action_copy->setText(tr("Duplicate(&D)"));
+    action_copy->setShortcut(QKeySequence::Copy);
+    action_copy->setShortcutContext(Qt::WidgetShortcut);
+    action_copy->setShortcutVisibleInContextMenu(true);
+    action_copy->setEnabled(ui->masterLogBrowser->textCursor().hasSelection());
+    connect(action_copy, &QAction::triggered, this, [=] {
+        ui->masterLogBrowser->copy();
+    });
+    menu.addAction(action_copy);
+
+    auto link = ui->masterLogBrowser->anchorAt(pos);
+    if (!link.isEmpty()) {
+        auto action_copy_link = new QAction(&menu);
+        action_copy_link->setText(tr("Link Location Copy(&L)"));
+        action_copy_link->setShortcut(QKeySequence(Qt::Key_L));
+        action_copy_link->setShortcutContext(Qt::WidgetShortcut);
+        action_copy_link->setShortcutVisibleInContextMenu(true);
+        connect(action_copy_link, &QAction::triggered, this, [=] {
+            QApplication::clipboard()->setText(link);
+        });
+        menu.addAction(action_copy_link);
     }
 
-    auto sep = new QAction(this);
-    sep->setSeparator(true);
-    menu->addAction(sep);
+    auto action_select_all = new QAction(&menu);
+    action_select_all->setText(tr("Select All"));
+    action_select_all->setShortcut(QKeySequence::SelectAll);
+    action_select_all->setShortcutContext(Qt::WidgetShortcut);
+    action_select_all->setShortcutVisibleInContextMenu(true);
+    connect(action_select_all, &QAction::triggered, this, [=] {
+        ui->masterLogBrowser->selectAll();
+    });
+    menu.addAction(action_select_all);
+    menu.addSeparator();
 
-    auto action_add_ignore = new QAction(this);
+    auto action_add_ignore = new QAction(&menu);
     action_add_ignore->setText(tr("Set ignore keyword"));
     connect(action_add_ignore, &QAction::triggered, this, [=] {
         auto list = NekoGui::dataStore->log_ignore;
@@ -1600,9 +1617,9 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
             NekoGui::dataStore->Save();
         }
     });
-    menu->addAction(action_add_ignore);
+    menu.addAction(action_add_ignore);
 
-    auto action_add_route = new QAction(this);
+    auto action_add_route = new QAction(&menu);
     action_add_route->setText(tr("Save as route"));
     connect(action_add_route, &QAction::triggered, this, [=] {
         auto newStr = ui->masterLogBrowser->textCursor().selectedText().trimmed();
@@ -1645,9 +1662,9 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
             MW_dialog_message("", "UpdateDataStore,RouteChanged");
         }
     });
-    menu->addAction(action_add_route);
+    menu.addAction(action_add_route);
 
-    auto action_copy_all = new QAction(menu);
+    auto action_copy_all = new QAction(&menu);
     action_copy_all->setText(tr("Select All and Copy(&A)"));
     action_copy_all->setShortcut(QKeySequence(Qt::Key_A));
     action_copy_all->setShortcutContext(Qt::WidgetShortcut);
@@ -1656,9 +1673,9 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
         ui->masterLogBrowser->selectAll();
         ui->masterLogBrowser->copy();
     });
-    menu->addAction(action_copy_all);
+    menu.addAction(action_copy_all);
 
-    auto action_clear = new QAction(menu);
+    auto action_clear = new QAction(&menu);
     action_clear->setText(tr("Clear(&C)"));
     action_clear->setShortcut(QKeySequence(Qt::Key_C));
     action_clear->setShortcutContext(Qt::WidgetShortcut);
@@ -1667,9 +1684,9 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
         qvLogDocument->clear();
         ui->masterLogBrowser->clear();
     });
-    menu->addAction(action_clear);
+    menu.addAction(action_clear);
 
-    menu->exec(ui->masterLogBrowser->viewport()->mapToGlobal(pos)); // 弹出菜单
+    menu.exec(ui->masterLogBrowser->viewport()->mapToGlobal(pos)); // 弹出菜单
 }
 
 // eventFilter

@@ -1518,6 +1518,14 @@ End: %2</source>
         <source>Select All and Copy(&amp;A)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Duplicate(&amp;D)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Link Location Copy(&amp;L)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProxyItem</name>
