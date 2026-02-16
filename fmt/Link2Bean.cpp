@@ -43,6 +43,17 @@ namespace NekoGui_fmt {
             return def;
         }
 
+        bool IsTruthyValue(const QString &value) {
+            auto v = value.trimmed().toLower();
+            return v == "1" || v == "true" || v == "yes" || v == "on";
+        }
+
+        void ApplyBoolQueryFlag(const QUrl &url, const QUrlQuery &query, const QStringList &keys, bool &target) {
+            auto rawValue = GetQueryValueAny(url, query, keys);
+            if (rawValue.isEmpty()) return;
+            target = IsTruthyValue(rawValue);
+        }
+
     } // namespace
 
 #define DECODE_V2RAY_N_1                                                                                                        \
@@ -111,7 +122,7 @@ namespace NekoGui_fmt {
         if (!sni1.isEmpty()) stream->sni = sni1;
         if (!sni2.isEmpty()) stream->sni = sni2;
         stream->alpn = GetQueryValue(query, "alpn");
-        if (!query.queryItemValue("allowInsecure").isEmpty()) stream->allow_insecure = true;
+        ApplyBoolQueryFlag(url, query, {"allowInsecure", "insecure", "skip-cert-verify"}, stream->allow_insecure);
         stream->reality_pbk = GetQueryValue(query, "pbk", "");
         stream->reality_sid = GetQueryValue(query, "sid", "");
         stream->reality_spx = GetQueryValue(query, "spx", "");
@@ -246,7 +257,7 @@ namespace NekoGui_fmt {
             auto sni2 = GetQueryValue(query, "peer");
             if (!sni1.isEmpty()) stream->sni = sni1;
             if (!sni2.isEmpty()) stream->sni = sni2;
-            if (!query.queryItemValue("allowInsecure").isEmpty()) stream->allow_insecure = true;
+            ApplyBoolQueryFlag(url, query, {"allowInsecure", "insecure", "skip-cert-verify"}, stream->allow_insecure);
             stream->reality_pbk = GetQueryValue(query, "pbk", "");
             stream->reality_sid = GetQueryValue(query, "sid", "");
             stream->reality_spx = GetQueryValue(query, "spx", "");
