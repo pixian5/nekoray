@@ -399,7 +399,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     core_path += "nekobox_core";
 
     QStringList args;
-    args.push_back("newbeeplus");
+    // Keep legacy run mode argument for compatibility with older nekobox_core binaries.
+    args.push_back("nekobox");
     args.push_back("-port");
     args.push_back(Int2String(NekoGui::dataStore->core_port));
     if (NekoGui::dataStore->flag_debug) args.push_back("-debug");
