@@ -722,10 +722,6 @@ For more information, see the document &quot;Configuration/DNS&quot;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Whether blacklisted or whitelisted, your traffic will be handled by nekobox_core (sing-tun). This is NOT equal to &quot;process mode&quot; of some software.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Whitelist mode</source>
         <translation type="unfinished">حالت لیست سفید</translation>
     </message>
@@ -742,13 +738,6 @@ For more information, see the document &quot;Configuration/DNS&quot;.</source>
         <translation type="unfinished">عیب یابی</translation>
     </message>
     <message>
-        <source>If you have trouble starting VPN, you can force reset nekobox_core process here.
-
-If still not working, see documentation for more information.
-https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reset</source>
         <translation type="unfinished">بازنشانی</translation>
     </message>
@@ -763,6 +752,17 @@ https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
     <message>
         <source>Add a tun inbound to the profile startup, instead of using two processes.
 This needs to be run NewBeePlus with administrator privileges.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Whether blacklisted or whitelisted, your traffic will be handled by newbeeplus_core (sing-tun). This is NOT equal to &quot;process mode&quot; of some software.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you have trouble starting VPN, you can force reset newbeeplus_core process here.
+
+If still not working, see documentation for more information.
+https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

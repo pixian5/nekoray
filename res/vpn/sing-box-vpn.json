@@ -46,8 +46,8 @@
                 "process_name": [
                     "nekoray_core",
                     "nekoray_core.exe",
-                    "nekobox_core",
-                    "nekobox_core.exe"
+                    "newbeeplus_core",
+                    "newbeeplus_core.exe"
                 ],
                 "server": "dns-direct"
             },
@@ -135,8 +135,8 @@
                 "process_name": [
                     "nekoray_core",
                     "nekoray_core.exe",
-                    "nekobox_core",
-                    "nekobox_core.exe"
+                    "newbeeplus_core",
+                    "newbeeplus_core.exe"
                 ],
                 "outbound": "direct"
             }

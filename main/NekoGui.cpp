@@ -446,8 +446,8 @@ namespace NekoGui {
         return {};
     }
 
-    QString FindNekoBoxCoreRealPath() {
-        auto fn = QApplication::applicationDirPath() + "/nekobox_core";
+    QString FindNewBeePlusCoreRealPath() {
+        auto fn = QApplication::applicationDirPath() + "/newbeeplus_core";
         auto fi = QFileInfo(fn);
         if (fi.isSymLink()) return fi.symLinkTarget();
         return fn;
@@ -464,7 +464,7 @@ namespace NekoGui {
         admin = Windows_IsInAdmin();
 #else
 #ifdef Q_OS_LINUX
-        admin |= Linux_GetCapString(FindNekoBoxCoreRealPath()).contains("cap_net_admin");
+        admin |= Linux_GetCapString(FindNewBeePlusCoreRealPath()).contains("cap_net_admin");
 #endif
         admin |= geteuid() == 0;
 #endif

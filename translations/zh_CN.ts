@@ -734,22 +734,8 @@ For more information, see the document &quot;Configuration/DNS&quot;.</source>
         <translation>代理进程名</translation>
     </message>
     <message>
-        <source>Whether blacklisted or whitelisted, your traffic will be handled by nekobox_core (sing-tun). This is NOT equal to &quot;process mode&quot; of some software.</source>
-        <translation>无论是黑名单还是白名单，您的流量都将由 nekobox_core (sing-tun) 处理。这不等于某些软件的「进程模式」。</translation>
-    </message>
-    <message>
         <source>Troubleshooting</source>
         <translation>故障排除</translation>
-    </message>
-    <message>
-        <source>If you have trouble starting VPN, you can force reset nekobox_core process here.
-
-If still not working, see documentation for more information.
-https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
-        <translation>如果您在启动 Tun 时遇到问题，您可以在此处强制重置 nekobox_core 进程。
-
-如果仍然无法正常工作，请参阅文档以获取更多信息。
-https://matsuridayo.github.io/n-configuration/#vpn-tun</translation>
     </message>
     <message>
         <source>Reset</source>
@@ -767,6 +753,20 @@ https://matsuridayo.github.io/n-configuration/#vpn-tun</translation>
         <source>Add a tun inbound to the profile startup, instead of using two processes.
 This needs to be run NewBeePlus with administrator privileges.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Whether blacklisted or whitelisted, your traffic will be handled by newbeeplus_core (sing-tun). This is NOT equal to &quot;process mode&quot; of some software.</source>
+        <translation>无论是黑名单还是白名单，您的流量都将由 newbeeplus_core (sing-tun) 处理。这不等于某些软件的「进程模式」。</translation>
+    </message>
+    <message>
+        <source>If you have trouble starting VPN, you can force reset newbeeplus_core process here.
+
+If still not working, see documentation for more information.
+https://matsuridayo.github.io/n-configuration/#vpn-tun</source>
+        <translation>如果您在启动 Tun 时遇到问题，您可以在此处强制重置 newbeeplus_core 进程。
+
+如果仍然无法正常工作，请参阅文档以获取更多信息。
+https://matsuridayo.github.io/n-configuration/#vpn-tun</translation>
     </message>
 </context>
 <context>

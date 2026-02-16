@@ -396,11 +396,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     if (NekoGui::dataStore->core_port <= 0) NekoGui::dataStore->core_port = 19810;
 
     auto core_path = QApplication::applicationDirPath() + "/";
-    core_path += "nekobox_core";
+    core_path += "newbeeplus_core";
 
     QStringList args;
-    // Keep legacy run mode argument for compatibility with older nekobox_core binaries.
-    args.push_back("nekobox");
+    args.push_back("newbeeplus");
     args.push_back("-port");
     args.push_back(Int2String(NekoGui::dataStore->core_port));
     if (NekoGui::dataStore->flag_debug) args.push_back("-debug");
@@ -816,7 +815,7 @@ void MainWindow::neko_set_spmode_vpn(bool enable, bool save) {
                         MessageBoxWarning(software_name, "Please install \"pkexec\" first.");
                         neko_set_spmode_FAILED
                     }
-                    auto ret = Linux_Pkexec_SetCapString(NekoGui::FindNekoBoxCoreRealPath(), "cap_net_admin=ep");
+                    auto ret = Linux_Pkexec_SetCapString(NekoGui::FindNewBeePlusCoreRealPath(), "cap_net_admin=ep");
                     if (ret == 0) {
                         this->exit_reason = 3;
                         on_menu_exit_triggered();
@@ -1928,7 +1927,7 @@ bool MainWindow::StartVPNProcess() {
 #ifdef Q_OS_WIN
     runOnNewThread([=] {
         vpn_pid = 1; // TODO get pid?
-        WinCommander::runProcessElevated(QApplication::applicationDirPath() + "/nekobox_core.exe",
+        WinCommander::runProcessElevated(QApplication::applicationDirPath() + "/newbeeplus_core.exe",
                                          {"--disable-color", "run", "-c", configPath}, "",
                                          NekoGui::dataStore->vpn_hide_console ? WinCommander::SW_HIDE : WinCommander::SW_SHOWMINIMIZED); // blocking
         vpn_pid = 0;
@@ -1963,7 +1962,7 @@ bool MainWindow::StopVPNProcess(bool unconditional) {
         bool ok;
         core_process->processId();
 #ifdef Q_OS_WIN
-        auto ret = WinCommander::runProcessElevated("taskkill", {"/IM", "nekobox_core.exe",
+        auto ret = WinCommander::runProcessElevated("taskkill", {"/IM", "newbeeplus_core.exe",
                                                                  "/FI",
                                                                  "PID ne " + Int2String(core_process->processId())});
         ok = ret == 0;
@@ -1971,10 +1970,10 @@ bool MainWindow::StopVPNProcess(bool unconditional) {
         QProcess p;
 #ifdef Q_OS_MACOS
         p.start("osascript", {"-e", QStringLiteral("do shell script \"%1\" with administrator privileges")
-                                        .arg("pkill -2 -U 0 nekobox_core")});
+                                        .arg("pkill -2 -U 0 newbeeplus_core")});
 #else
         if (unconditional) {
-            p.start("pkexec", {"killall", "-2", "nekobox_core"});
+            p.start("pkexec", {"killall", "-2", "newbeeplus_core"});
         } else {
             p.start("pkexec", {"pkill", "-2", "-P", Int2String(vpn_pid)});
         }

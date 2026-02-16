@@ -9,7 +9,7 @@ set -e
 #   1. 杀掉旧的 newbeeplus/xray 进程
 #   2. 安装 MSYS2 依赖包
 #   3. 初始化 Git 子模块 + Go 依赖
-#   4. 编译 Go 后端 (nekobox_core.exe, updater.exe)
+#   4. 编译 Go 后端 (newbeeplus_core.exe, updater.exe)
 #   5. 编译 C++ GUI (newbeeplus.exe)
 #   6. 复制运行依赖到 build/ (开发调试用)
 #   7. 打包到 dist/nekoray/ (发布用)
@@ -129,7 +129,7 @@ echo "  MSYS2 MinGW64, Go $GO_VER"
 echo ""
 echo "=== 结束旧进程 ==="
 taskkill //F //IM newbeeplus.exe 2>/dev/null && echo "  已结束 newbeeplus.exe" || true
-taskkill //F //IM nekobox_core.exe 2>/dev/null && echo "  已结束 nekobox_core.exe" || true
+taskkill //F //IM newbeeplus_core.exe 2>/dev/null && echo "  已结束 newbeeplus_core.exe" || true
 taskkill //F //IM xray.exe 2>/dev/null && echo "  已结束 xray.exe" || true
 sleep 1
 
@@ -192,9 +192,9 @@ echo ""
 echo "=== 准备 build/ 运行环境 ==="
 
 # 复制 Go 后端
-if [ -f deployment/windows64/nekobox_core.exe ]; then
-    cp deployment/windows64/nekobox_core.exe build/
-    echo "  nekobox_core.exe -> build/"
+if [ -f deployment/windows64/newbeeplus_core.exe ]; then
+    cp deployment/windows64/newbeeplus_core.exe build/
+    echo "  newbeeplus_core.exe -> build/"
 fi
 
 # 下载 geodata 到 build/
@@ -238,7 +238,7 @@ cp "$QT_PLUGIN_DIR/styles/"*.dll "$DIST/styles/" 2>/dev/null || true
 bash "$SRC_ROOT/libs/collect_dlls_mingw.sh" "$DIST"
 
 # Go 后端二进制
-cp deployment/windows64/nekobox_core.exe "$DIST/" 2>/dev/null || true
+cp deployment/windows64/newbeeplus_core.exe "$DIST/" 2>/dev/null || true
 cp deployment/windows64/updater.exe "$DIST/" 2>/dev/null || true
 
 # 公共资源
@@ -251,23 +251,23 @@ download_geodata "$DIST"
 echo ""
 echo "=== 下载代理核心 (dist) ==="
 
-# sing-box (nekobox_core) - 仅在编译的不存在时下载
-if [ ! -f "$DIST/nekobox_core.exe" ]; then
-    echo "  下载 sing-box (nekobox_core) ..."
+# sing-box (newbeeplus_core) - 仅在编译的不存在时下载
+if [ ! -f "$DIST/newbeeplus_core.exe" ]; then
+    echo "  下载 sing-box (newbeeplus_core) ..."
     SINGBOX_VER=$(curl -fLs "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
     if [ -n "$SINGBOX_VER" ]; then
         curl -fLo /tmp/sing-box.tar.gz \
             "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.tar.gz" \
             && tar -xzf /tmp/sing-box.tar.gz -C /tmp --wildcards '*/sing-box.exe' \
-            && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/nekobox_core.exe" \; \
-            && echo "  sing-box $SINGBOX_VER -> nekobox_core.exe" \
+            && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/newbeeplus_core.exe" \; \
+            && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
             || echo "  警告: 下载 sing-box 失败，尝试 zip 格式 ..."
-        if [ ! -f "$DIST/nekobox_core.exe" ]; then
+        if [ ! -f "$DIST/newbeeplus_core.exe" ]; then
             curl -fLo /tmp/sing-box.zip \
                 "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.zip" \
                 && unzip -o /tmp/sing-box.zip '*/sing-box.exe' -d /tmp \
-                && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/nekobox_core.exe" \; \
-                && echo "  sing-box $SINGBOX_VER -> nekobox_core.exe" \
+                && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/newbeeplus_core.exe" \; \
+                && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
                 || echo "  警告: 下载 sing-box 失败"
         fi
     else

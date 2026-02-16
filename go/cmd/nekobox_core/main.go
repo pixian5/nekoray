@@ -34,7 +34,7 @@ func main() {
 	fmt.Println()
 
 	// GUI core mode
-	if len(os.Args) > 1 && (os.Args[1] == "newbeeplus" || os.Args[1] == "nekobox") {
+	if len(os.Args) > 1 && os.Args[1] == "newbeeplus" {
 		neko_common.RunMode = neko_common.RunMode_NekoBox_Core
 		grpc_server.RunCore(setupCore, &server{})
 		return

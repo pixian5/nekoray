@@ -4,5 +4,5 @@
 *.exe
 *.dat
 /cmd/nekoray_core/nekoray_core
-/cmd/nekobox_core/nekobox_core
+/cmd/nekobox_core/newbeeplus_core
 *.db

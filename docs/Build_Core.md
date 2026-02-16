@@ -1,4 +1,4 @@
-## 构建 nekobox_core
+## 构建 newbeeplus_core
 
 ### 目录结构
 
