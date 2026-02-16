@@ -13,14 +13,24 @@ import (
 )
 
 func main() {
+	lines := make([]string, 0, 2)
+
 	displayVersion := constant.Version
 	if externalBinary, err := resolveSingBoxExecutablePath(); err == nil {
 		if externalVersion := readSingBoxVersionFromBinary(externalBinary); externalVersion != "" {
 			displayVersion = externalVersion
 		}
 	}
+	lines = append(lines, "sing-box: "+displayVersion)
 
-	fmt.Println("sing-box:", displayVersion, "NekoBox:", neko_common.Version_neko)
+	if xrayBinary, err := resolveXrayExecutablePath(); err == nil {
+		if xrayVersion := readXrayVersionFromBinary(xrayBinary); xrayVersion != "" {
+			lines = append(lines, "xray: "+xrayVersion)
+		}
+	}
+	for _, line := range lines {
+		fmt.Println(line)
+	}
 	fmt.Println()
 
 	// nekobox_core
