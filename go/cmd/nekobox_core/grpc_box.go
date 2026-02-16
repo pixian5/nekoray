@@ -122,6 +122,15 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 	var err error
 	out = &gen.TestResp{Ms: 0}
 
+	in.Url = strings.TrimSpace(in.Url)
+	if in.Url == "" {
+		in.Url = "http://cp.cloudflare.com/"
+	}
+	in.FullSpeedUrl = strings.TrimSpace(in.FullSpeedUrl)
+	if in.FullSpeedUrl == "" {
+		in.FullSpeedUrl = "http://cachefly.cachefly.net/10mb.test"
+	}
+
 	defer func() {
 		if err != nil {
 			out.Error = err.Error()

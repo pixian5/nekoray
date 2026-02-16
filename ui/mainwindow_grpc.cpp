@@ -176,7 +176,9 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                     libcore::TestReq req;
                     req.set_mode((libcore::TestMode) mode);
                     req.set_timeout(10 * 1000);
-                    req.set_url(NekoGui::dataStore->test_latency_url.toStdString());
+                    auto latencyUrl = NekoGui::dataStore->test_latency_url.trimmed();
+                    if (latencyUrl.isEmpty()) latencyUrl = "http://cp.cloudflare.com/";
+                    req.set_url(latencyUrl.toStdString());
 
                     //
                     std::list<std::shared_ptr<NekoGui_sys::ExternalProcess>> extCs;
@@ -220,7 +222,9 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         req.set_full_speed(full_test_flags.contains("3"));
                         req.set_full_in_out(full_test_flags.contains("4"));
 
-                        req.set_full_speed_url(NekoGui::dataStore->test_download_url.toStdString());
+                        auto downloadUrl = NekoGui::dataStore->test_download_url.trimmed();
+                        if (downloadUrl.isEmpty()) downloadUrl = "http://cachefly.cachefly.net/10mb.test";
+                        req.set_full_speed_url(downloadUrl.toStdString());
                         req.set_full_speed_timeout(NekoGui::dataStore->test_download_timeout);
                     } else if (mode == libcore::TcpPing) {
                         req.set_address(profile->bean->DisplayAddress().toStdString());
@@ -291,7 +295,9 @@ void MainWindow::speedtest_current() {
         libcore::TestReq req;
         req.set_mode(libcore::UrlTest);
         req.set_timeout(10 * 1000);
-        req.set_url(NekoGui::dataStore->test_latency_url.toStdString());
+        auto latencyUrl = NekoGui::dataStore->test_latency_url.trimmed();
+        if (latencyUrl.isEmpty()) latencyUrl = "http://cp.cloudflare.com/";
+        req.set_url(latencyUrl.toStdString());
 
         bool rpcOK;
         auto result = defaultClient->Test(&rpcOK, req);
