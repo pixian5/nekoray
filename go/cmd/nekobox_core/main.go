@@ -13,7 +13,14 @@ import (
 )
 
 func main() {
-	fmt.Println("sing-box:", constant.Version, "NekoBox:", neko_common.Version_neko)
+	displayVersion := constant.Version
+	if externalBinary, err := resolveSingBoxExecutablePath(); err == nil {
+		if externalVersion := readSingBoxVersionFromBinary(externalBinary); externalVersion != "" {
+			displayVersion = externalVersion
+		}
+	}
+
+	fmt.Println("sing-box:", displayVersion, "NekoBox:", neko_common.Version_neko)
 	fmt.Println()
 
 	// nekobox_core
@@ -23,6 +30,11 @@ func main() {
 		return
 	}
 
-	// sing-box
+	// sing-box CLI
+	if handled, code := runExternalSingBoxCLI(os.Args[1:]); handled {
+		os.Exit(code)
+	}
+
+	// fallback: embedded sing-box
 	boxmain.Main()
 }

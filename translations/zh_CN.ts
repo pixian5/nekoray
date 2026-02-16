@@ -1769,14 +1769,6 @@ Release note:
         <source>sing-box and xray are already up to date.</source>
         <translation>sing-box 和 xray 已是最新版本。</translation>
     </message>
-    <message>
-        <source>%1 cannot be auto-updated. Please update the program package.</source>
-        <translation>%1 无法自动更新，请更新整个程序安装包。</translation>
-    </message>
-    <message>
-        <source>sing-box is embedded in nekobox_core. Please update Nekoray package to upgrade sing-box.</source>
-        <translation>sing-box 内置在 nekobox_core 中，请更新 Nekoray 安装包以升级 sing-box。</translation>
-    </message>
 </context>
 <context>
     <name>Qv2ray::ui::widgets::AutoCompleteTextEdit</name>

@@ -21,7 +21,13 @@ func setupCore() {
 	neko_log.SetupLog(50*1024, "./neko.log")
 	//
 	neko_common.GetCurrentInstance = func() interface{} {
-		return instance
+		if instance != nil {
+			return instance
+		}
+		if port := currentExternalSocksPort(); port > 0 {
+			return port
+		}
+		return nil
 	}
 	neko_common.DialContext = func(ctx context.Context, specifiedInstance interface{}, network, addr string) (net.Conn, error) {
 		if i, ok := specifiedInstance.(*box.Box); ok {
@@ -45,6 +51,19 @@ func setupCore() {
 		if i, ok := specifiedInstance.(*box.Box); ok {
 			return boxapi.CreateProxyHttpClient(i)
 		}
-		return boxapi.CreateProxyHttpClient(instance)
+		if port, ok := specifiedInstance.(int); ok && port > 0 {
+			if client, err := createSocks5HttpClient(port); err == nil {
+				return client
+			}
+		}
+		if port := currentExternalSocksPort(); port > 0 {
+			if client, err := createSocks5HttpClient(port); err == nil {
+				return client
+			}
+		}
+		if instance != nil {
+			return boxapi.CreateProxyHttpClient(instance)
+		}
+		return &http.Client{}
 	}
 }

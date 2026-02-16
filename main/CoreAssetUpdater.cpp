@@ -37,8 +37,6 @@ namespace NekoGui_update {
             QString repoApi;
             QString binaryName;
             QString targetPath;
-            bool installable = true;
-            QString installNotice;
         };
 
         inline void append_log(CoreAssetUpdateReport &report, const QString &message, bool interactive) {
@@ -174,6 +172,20 @@ namespace NekoGui_update {
 
         QString app_binary_path(const QString &name) {
             return QDir::cleanPath(QApplication::applicationDirPath() + "/" + name + current_binary_suffix());
+        }
+
+        QString resolve_singbox_target_path() {
+            auto coreMap = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
+            auto configuredPath = coreMap.value("sing-box").toString().trimmed();
+            if (!configuredPath.isEmpty()) {
+                QFileInfo fi(configuredPath);
+                if (fi.isRelative()) {
+                    configuredPath = QDir::cleanPath(QApplication::applicationDirPath() + "/" + configuredPath);
+                }
+                return configuredPath;
+            }
+
+            return app_binary_path("sing-box");
         }
 
         QString resolve_xray_target_path() {
@@ -402,16 +414,6 @@ namespace NekoGui_update {
                 return;
             }
 
-            if (!ctx.installable) {
-                append_log(report,
-                           ctx.installNotice.isEmpty()
-                               ? QObject::tr("%1 cannot be auto-updated. Please update the program package.")
-                                     .arg(ctx.displayName)
-                               : ctx.installNotice,
-                           interactive);
-                return;
-            }
-
             auto assets = release.value("assets").toArray();
             QString assetUrl;
             if (ctx.displayName == "sing-box") {
@@ -514,9 +516,7 @@ namespace NekoGui_update {
             "sing-box",
             "https://api.github.com/repos/SagerNet/sing-box/releases/latest",
             "sing-box" + current_binary_suffix(),
-            app_binary_path("nekobox_core"),
-            false,
-            QObject::tr("sing-box is embedded in nekobox_core. Please update Nekoray package to upgrade sing-box."),
+            resolve_singbox_target_path(),
         };
 
         AssetContext xray{

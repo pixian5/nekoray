@@ -182,6 +182,7 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
     ui->groupBox_core->setTitle(software_core_name);
     //
     CACHE.extraCore = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
+    if (!CACHE.extraCore.contains("sing-box")) CACHE.extraCore.insert("sing-box", "");
     if (!CACHE.extraCore.contains("naive")) CACHE.extraCore.insert("naive", "");
     if (!CACHE.extraCore.contains("hysteria2")) CACHE.extraCore.insert("hysteria2", "");
     if (!CACHE.extraCore.contains("tuic")) CACHE.extraCore.insert("tuic", "");

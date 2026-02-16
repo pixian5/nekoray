@@ -407,6 +407,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     runOnUiThread(
         [=] {
             core_process = new NekoGui_sys::CoreProcess(core_path, args);
+            core_process->env << "NEKOBOX_SINGBOX_MODE=external-prefer";
+            auto singBoxPath = NekoGui::dataStore->extraCore->Get("sing-box");
+            if (!singBoxPath.trimmed().isEmpty()) {
+                core_process->env << ("NEKOBOX_SINGBOX_PATH=" + singBoxPath);
+            }
             // Remember last started
             if (NekoGui::dataStore->remember_enable && NekoGui::dataStore->remember_id >= 0) {
                 core_process->start_profile_when_core_is_up = NekoGui::dataStore->remember_id;

@@ -1756,14 +1756,6 @@ Direct: %2</source>
         <source>sing-box and xray are already up to date.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>%1 cannot be auto-updated. Please update the program package.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>sing-box is embedded in nekobox_core. Please update Nekoray package to upgrade sing-box.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>Qv2ray::ui::widgets::AutoCompleteTextEdit</name>
