@@ -230,6 +230,9 @@
         <property name="text">
          <string>测试延迟</string>
         </property>
+        <property name="toolTip">
+         <string>Ctrl键+R</string>
+        </property>
         <property name="popupMode">
          <enum>QToolButton::InstantPopup</enum>
         </property>
@@ -709,7 +712,7 @@
     <string notr="true">测试延迟</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+Alt+U</string>
+    <string notr="true">Ctrl+R</string>
    </property>
   </action>
   <action name="menu_clear_test_result">
@@ -733,7 +736,7 @@
     <string>Reset Traffic</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+R</string>
+    <string notr="true">Ctrl+Shift+R</string>
    </property>
   </action>
   <action name="menu_scan_qr">

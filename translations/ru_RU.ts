@@ -1526,6 +1526,10 @@ End: %2</source>
         <source>测试延迟</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ctrl键+R</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProxyItem</name>
