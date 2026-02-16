@@ -160,6 +160,8 @@ private:
     QMutex mu_exit;
     QSemaphore sem_stopped;
     int exit_reason = 0;
+    bool restart_keep_system_proxy = false;
+    bool restart_keep_vpn = false;
 
     QList<std::shared_ptr<NekoGui::ProxyEntity>> get_now_selected_list();
 

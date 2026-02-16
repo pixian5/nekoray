@@ -411,8 +411,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         DS_cores);
 
     // Remember system proxy
-    if (NekoGui::dataStore->remember_enable || NekoGui::dataStore->flag_restart_tun_on) {
-        if (NekoGui::dataStore->remember_spmode.contains("system_proxy")) {
+    if (NekoGui::dataStore->remember_enable || NekoGui::dataStore->flag_restart_tun_on || NekoGui::dataStore->flag_restart_sp_on) {
+        if (NekoGui::dataStore->remember_spmode.contains("system_proxy") || NekoGui::dataStore->flag_restart_sp_on) {
             neko_set_spmode_system_proxy(true, false);
         }
         if (NekoGui::dataStore->remember_spmode.contains("vpn") || NekoGui::dataStore->flag_restart_tun_on) {
@@ -650,6 +650,13 @@ void MainWindow::on_commitDataRequest() {
 void MainWindow::on_menu_exit_triggered() {
     if (mu_exit.tryLock()) {
         NekoGui::dataStore->prepare_exit = true;
+        if (exit_reason == 2 || exit_reason == 3) {
+            restart_keep_system_proxy = NekoGui::dataStore->spmode_system_proxy;
+            restart_keep_vpn = NekoGui::dataStore->spmode_vpn;
+        } else {
+            restart_keep_system_proxy = false;
+            restart_keep_vpn = false;
+        }
         //
         neko_set_spmode_system_proxy(false, false);
         neko_set_spmode_vpn(false, false);
@@ -687,15 +694,24 @@ void MainWindow::on_menu_exit_triggered() {
             arguments.removeFirst();
             arguments.removeAll("-tray");
             arguments.removeAll("-flag_restart_tun_on");
+            arguments.removeAll("-flag_restart_sp_on");
             arguments.removeAll("-flag_reorder");
         }
         auto isLauncher = qEnvironmentVariable("NKR_FROM_LAUNCHER") == "1";
         if (isLauncher) arguments.prepend("--");
         auto program = isLauncher ? "./launcher" : QApplication::applicationFilePath();
 
+        if (restart_keep_system_proxy) {
+            arguments << "-flag_restart_sp_on";
+        }
+        if (restart_keep_vpn) {
+            arguments << "-flag_restart_tun_on";
+        }
         if (exit_reason == 3) {
             // Tun restart as admin
-            arguments << "-flag_restart_tun_on";
+            if (!arguments.contains("-flag_restart_tun_on")) {
+                arguments << "-flag_restart_tun_on";
+            }
 #ifdef Q_OS_WIN
             WinCommander::runProcessElevated(program, arguments, "", WinCommander::SW_NORMAL, false);
 #else
