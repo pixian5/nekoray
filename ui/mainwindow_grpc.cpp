@@ -14,6 +14,10 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QDialogButtonBox>
+#include <QMutexLocker>
+#include <QSemaphore>
+
+#include <atomic>
 
 // ext core
 
@@ -55,11 +59,29 @@ void MainWindow::setup_grpc() {
 
 // 测速
 
-inline bool speedtesting = false;
+inline std::atomic_bool speedtesting = false;
+inline std::atomic_bool speedtesting_cancelled = false;
 inline QList<QThread *> speedtesting_threads = {};
+inline QMutex speedtesting_threads_mutex;
 
 void MainWindow::speedtest_current_group(int mode, bool test_group) {
-    if (speedtesting) {
+    // menu_stop_testing
+    if (mode == 114514) {
+        speedtesting_cancelled.store(true);
+        QList<QThread *> threads;
+        {
+            QMutexLocker locker(&speedtesting_threads_mutex);
+            threads = speedtesting_threads;
+        }
+        for (auto t: threads) {
+            if (t == nullptr) continue;
+            t->requestInterruption();
+            t->exit();
+        }
+        return;
+    }
+
+    if (speedtesting.load()) {
         MessageBoxWarning(software_name, QObject::tr("The last speed test did not exit completely, please wait. If it persists, please restart the program."));
         return;
     }
@@ -69,16 +91,6 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
     if (profiles.isEmpty()) return;
     auto group = NekoGui::profileManager->CurrentGroup();
     if (group->archive) return;
-
-    // menu_stop_testing
-    if (mode == 114514) {
-        while (!speedtesting_threads.isEmpty()) {
-            auto t = speedtesting_threads.takeFirst();
-            if (t != nullptr) t->exit();
-        }
-        speedtesting = false;
-        return;
-    }
 
 #ifndef NKR_NO_GRPC
     QStringList full_test_flags;
@@ -116,33 +128,45 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
         w->deleteLater();
         if (full_test_flags.isEmpty()) return;
     }
-    speedtesting = true;
+    speedtesting.store(true);
+    speedtesting_cancelled.store(false);
 
     runOnNewThread([this, profiles, mode, full_test_flags]() {
         QMutex lock_write;
-        QMutex lock_return;
+        QSemaphore finish_sem;
         int threadN = NekoGui::dataStore->test_concurrent;
-        int threadN_finished = 0;
         auto profiles_test = profiles; // copy
 
         // Threads
-        lock_return.lock();
         for (int i = 0; i < threadN; i++) {
             runOnNewThread([&] {
-                speedtesting_threads << QObject::thread();
+                auto currentThread = QThread::currentThread();
+                {
+                    QMutexLocker locker(&speedtesting_threads_mutex);
+                    speedtesting_threads << currentThread;
+                }
+                bool finished_marked = false;
+                auto finish_worker = [&] {
+                    if (finished_marked) return;
+                    finished_marked = true;
+                    {
+                        QMutexLocker threadLocker(&speedtesting_threads_mutex);
+                        speedtesting_threads.removeAll(currentThread);
+                    }
+                    finish_sem.release();
+                };
 
                 forever {
+                    if (speedtesting_cancelled.load() || currentThread->isInterruptionRequested()) {
+                        finish_worker();
+                        return;
+                    }
+
                     //
                     lock_write.lock();
                     if (profiles_test.isEmpty()) {
-                        threadN_finished++;
-                        if (threadN == threadN_finished) {
-                            // quit control thread
-                            lock_return.unlock();
-                        }
                         lock_write.unlock();
-                        // quit of this thread
-                        speedtesting_threads.removeAll(QObject::thread());
+                        finish_worker();
                         return;
                     }
                     auto profile = profiles_test.takeFirst();
@@ -182,7 +206,12 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         }
                         //
                         auto config = new libcore::LoadConfigReq;
-                        config->set_core_config(QJsonObject2QString(c->coreConfig, false).toStdString());
+                        if (c->extSocksPort > 0) {
+                            // External core: pass SOCKS5 port marker instead of sing-box config
+                            config->set_core_config("EXTERNAL_SOCKS:" + std::to_string(c->extSocksPort));
+                        } else {
+                            config->set_core_config(QJsonObject2QString(c->coreConfig, false).toStdString());
+                        }
                         req.set_allocated_config(config);
                         req.set_in_address(profile->bean->serverAddress.toStdString());
 
@@ -212,7 +241,10 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         extSem.acquire();
                     }
                     //
-                    if (!rpcOK) return;
+                    if (!rpcOK) {
+                        speedtesting_cancelled.store(true);
+                        continue;
+                    }
 
                     if (result.error().empty()) {
                         profile->latency = result.ms();
@@ -236,9 +268,15 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
         }
 
         // Control
-        lock_return.lock();
-        lock_return.unlock();
-        speedtesting = false;
+        for (int i = 0; i < threadN; ++i) {
+            finish_sem.acquire();
+        }
+        {
+            QMutexLocker locker(&speedtesting_threads_mutex);
+            speedtesting_threads.clear();
+        }
+        speedtesting_cancelled.store(false);
+        speedtesting.store(false);
         MW_show_log(QObject::tr("Speedtest finished."));
     });
 #endif
