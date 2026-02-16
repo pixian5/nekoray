@@ -46,6 +46,7 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QDir>
 #include <QFileInfo>
 
@@ -1569,6 +1570,18 @@ void MainWindow::show_log_impl(const QString &log) {
 
 void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &pos) {
     QMenu *menu = ui->masterLogBrowser->createStandardContextMenu();
+    // Keep Ctrl+C for copy, but remove mnemonic C binding from context-menu Copy action.
+    for (auto action: menu->actions()) {
+        if (action == nullptr) continue;
+        if (action->shortcut().matches(QKeySequence::Copy) == QKeySequence::ExactMatch) {
+            auto text = action->text();
+            text.remove(QRegularExpression(R"(\s*\(&?[A-Za-z]\))"));
+            text.remove(QRegularExpression(R"(\s*\([A-Za-z]\))"));
+            text.remove('&');
+            action->setText(text);
+            break;
+        }
+    }
 
     auto sep = new QAction(this);
     sep->setSeparator(true);
@@ -1635,7 +1648,7 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
     menu->addAction(action_add_route);
 
     auto action_copy_all = new QAction(menu);
-    action_copy_all->setText(tr("Copy All(&A)"));
+    action_copy_all->setText(tr("Select All and Copy(&A)"));
     action_copy_all->setShortcut(QKeySequence(Qt::Key_A));
     action_copy_all->setShortcutContext(Qt::WidgetShortcut);
     action_copy_all->setShortcutVisibleInContextMenu(true);

@@ -1511,11 +1511,11 @@ End: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copy All(&amp;A)</source>
+        <source>Clear(&amp;C)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Clear(&amp;C)</source>
+        <source>Select All and Copy(&amp;A)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
