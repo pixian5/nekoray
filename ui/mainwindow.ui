@@ -228,7 +228,7 @@
       <item>
        <widget class="QToolButton" name="toolButton_url_test">
         <property name="text">
-         <string>URL Test</string>
+         <string>测试延迟</string>
         </property>
         <property name="popupMode">
          <enum>QToolButton::InstantPopup</enum>
@@ -706,7 +706,7 @@
   </action>
   <action name="menu_url_test">
    <property name="text">
-    <string notr="true">Url Test</string>
+    <string notr="true">测试延迟</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+Alt+U</string>

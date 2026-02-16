@@ -1495,10 +1495,6 @@ Split by line.</source>
         <translation>停止测试</translation>
     </message>
     <message>
-        <source>URL Test</source>
-        <translation>测试延迟</translation>
-    </message>
-    <message>
         <source>[%1] test error: external core socks5 port not ready: %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1524,6 +1520,10 @@ Split by line.</source>
     </message>
     <message>
         <source>复制链接地址</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>测试延迟</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
