@@ -7,6 +7,7 @@
 #include "ui/Icon.hpp"
 #include "main/GuiUtils.hpp"
 #include "main/NekoGui.hpp"
+#include "main/CoreAssetUpdater.hpp"
 
 #include <QStyleFactory>
 #include <QFileDialog>
@@ -158,6 +159,26 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
     connect(ui->core_type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](int) {
         CACHE.needRestart = true;
     });
+    ui->core_asset_auto_update_mode->setCurrentIndex(qBound(0, NekoGui::dataStore->core_asset_auto_update_mode, 2));
+    connect(ui->core_asset_update_now, &QPushButton::clicked, this, [=] {
+        ui->core_asset_update_now->setEnabled(false);
+        runOnNewThread([=] {
+            auto report = NekoGui_update::UpdateCoreAssets(NekoGui_update::CoreAssetUpdateAction::Install, true);
+            runOnUiThread([=] {
+                ui->core_asset_update_now->setEnabled(true);
+                if (!report.lines.isEmpty()) {
+                    MessageBoxInfo(tr("Core update"), report.lines.join("\n"));
+                }
+                if (report.needRestart) {
+                    auto ask = QMessageBox::question(this, tr("Core update"),
+                                                     tr("Some core files are waiting for restart to apply. Restart now?"));
+                    if (ask == QMessageBox::Yes) {
+                        MW_dialog_message("", "RestartProgram");
+                    }
+                }
+            });
+        });
+    });
     ui->groupBox_core->setTitle(software_core_name);
     //
     CACHE.extraCore = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
@@ -272,7 +293,12 @@ void DialogBasicSettings::accept() {
 
     // Core
 
+    auto oldCoreAssetUpdateMode = NekoGui::dataStore->core_asset_auto_update_mode;
     NekoGui::dataStore->core_type = ui->core_type->currentIndex();
+    NekoGui::dataStore->core_asset_auto_update_mode = ui->core_asset_auto_update_mode->currentIndex();
+    if (oldCoreAssetUpdateMode != NekoGui::dataStore->core_asset_auto_update_mode) {
+        NekoGui::dataStore->core_asset_auto_update_last = 0;
+    }
     NekoGui::dataStore->extraCore->core_map = QJsonObject2QString(CACHE.extraCore, true);
 
     // Mux

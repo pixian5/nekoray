@@ -219,6 +219,34 @@
         <source>Mixed (SOCKS+HTTP) Listen Port</source>
         <translation>Mixed (SOCKS+HTTP) 监听端口</translation>
     </message>
+    <message>
+        <source>Scheduled update</source>
+        <translation>定时更新</translation>
+    </message>
+    <message>
+        <source>Check only</source>
+        <translation>仅检查</translation>
+    </message>
+    <message>
+        <source>Check and download</source>
+        <translation>检查并下载</translation>
+    </message>
+    <message>
+        <source>Install update</source>
+        <translation>安装更新</translation>
+    </message>
+    <message>
+        <source>Update now</source>
+        <translation>立即更新</translation>
+    </message>
+    <message>
+        <source>Core update</source>
+        <translation>核心更新</translation>
+    </message>
+    <message>
+        <source>Some core files are waiting for restart to apply. Restart now?</source>
+        <translation>部分核心文件需要重启后生效，是否现在重启？</translation>
+    </message>
 </context>
 <context>
     <name>DialogEditGroup</name>
@@ -1684,6 +1712,70 @@ Release note:
     <message>
         <source>Speedtest finished.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core update</source>
+        <translation>核心更新</translation>
+    </message>
+    <message>
+        <source>New sing-box/xray update is available.</source>
+        <translation>检测到 sing-box/xray 有新版本。</translation>
+    </message>
+    <message>
+        <source>Core update downloaded. Restart program to apply updates.</source>
+        <translation>核心更新已下载，重启程序后生效。</translation>
+    </message>
+    <message>
+        <source>Core update package has been downloaded.</source>
+        <translation>核心更新包已下载。</translation>
+    </message>
+    <message>
+        <source>Invalid release metadata response.</source>
+        <translation>发布信息响应无效。</translation>
+    </message>
+    <message>
+        <source>Unsupported archive format.</source>
+        <translation>不支持的压缩格式。</translation>
+    </message>
+    <message>
+        <source>Failed to start extractor: %1</source>
+        <translation>启动解压程序失败：%1</translation>
+    </message>
+    <message>
+        <source>Extractor timed out.</source>
+        <translation>解压超时。</translation>
+    </message>
+    <message>
+        <source>Extractor failed.</source>
+        <translation>解压失败。</translation>
+    </message>
+    <message>
+        <source>Failed to write pending file: %1</source>
+        <translation>写入待更新文件失败：%1</translation>
+    </message>
+    <message>
+        <source>Failed to stage update file.</source>
+        <translation>暂存更新文件失败。</translation>
+    </message>
+    <message>
+        <source>Target file is in use.</source>
+        <translation>目标文件正在使用中。</translation>
+    </message>
+    <message>
+        <source>Failed to replace target file.</source>
+        <translation>替换目标文件失败。</translation>
+    </message>
+    <message>
+        <source>sing-box and xray are already up to date.</source>
+        <translation>sing-box 和 xray 已是最新版本。</translation>
+    </message>
+    <message>
+        <source>%1 cannot be auto-updated. Please update the program package.</source>
+        <translation>%1 无法自动更新，请更新整个程序安装包。</translation>
+    </message>
+    <message>
+        <source>sing-box is embedded in nekobox_core. Please update Nekoray package to upgrade sing-box.</source>
+        <translation>sing-box 内置在 nekobox_core 中，请更新 Nekoray 安装包以升级 sing-box。</translation>
     </message>
 </context>
 <context>

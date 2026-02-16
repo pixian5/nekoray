@@ -11,6 +11,7 @@
 
 #include "3rdparty/RunGuard.hpp"
 #include "main/NekoGui.hpp"
+#include "main/CoreAssetUpdater.hpp"
 
 #include "ui/mainwindow_interface.h"
 
@@ -68,6 +69,7 @@ int main(int argc, char* argv[]) {
 
     // Clean
     QDir::setCurrent(QApplication::applicationDirPath());
+    NekoGui_update::ApplyPendingCoreAssetUpdates();
     if (QFile::exists("updater.old")) {
         QFile::remove("updater.old");
     }

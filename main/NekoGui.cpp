@@ -283,6 +283,8 @@ namespace NekoGui {
         _add(new configItem("core_box_clash_api", &core_box_clash_api, itemType::integer));
         _add(new configItem("core_box_clash_api_secret", &core_box_clash_api_secret, itemType::string));
         _add(new configItem("core_box_underlying_dns", &core_box_underlying_dns, itemType::string));
+        _add(new configItem("core_asset_auto_update_mode", &core_asset_auto_update_mode, itemType::integer));
+        _add(new configItem("core_asset_auto_update_last", &core_asset_auto_update_last, itemType::integer64));
         _add(new configItem("vpn_internal_tun", &vpn_internal_tun, itemType::boolean));
     }
 

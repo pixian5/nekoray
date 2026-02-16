@@ -16,6 +16,7 @@
 #include "ui/dialog_manage_routes.h"
 #include "ui/dialog_vpn_settings.h"
 #include "ui/dialog_hotkey.h"
+#include "main/CoreAssetUpdater.hpp"
 
 #include "3rdparty/fix_old_qt.h"
 #include "3rdparty/qrcodegen.hpp"
@@ -44,6 +45,7 @@
 #include <QInputDialog>
 #include <QThread>
 #include <QTimer>
+#include <QDateTime>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDir>
@@ -442,6 +444,45 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     };
     connect(TM_auto_update_subsctiption, &QTimer::timeout, this, [&] { UI_update_all_groups(true); });
     TM_auto_update_subsctiption_Reset_Minute(NekoGui::dataStore->sub_auto_update);
+
+    constexpr qint64 coreAssetAutoUpdateIntervalSec = 12 * 60 * 60;
+    auto run_core_asset_auto_update = [=] {
+        auto mode = qBound(0, NekoGui::dataStore->core_asset_auto_update_mode, 2);
+        auto action = static_cast<NekoGui_update::CoreAssetUpdateAction>(mode);
+
+        auto now = QDateTime::currentSecsSinceEpoch();
+        if (NekoGui::dataStore->core_asset_auto_update_last > 0 &&
+            now - NekoGui::dataStore->core_asset_auto_update_last < coreAssetAutoUpdateIntervalSec) {
+            return;
+        }
+        NekoGui::dataStore->core_asset_auto_update_last = now;
+        NekoGui::dataStore->Save();
+
+        runOnNewThread([=] {
+            auto report = NekoGui_update::UpdateCoreAssets(action, false);
+            if (report.hasUpdate && action == NekoGui_update::CoreAssetUpdateAction::CheckOnly) {
+                runOnUiThread([=] {
+                    MessageBoxInfo(QObject::tr("Core update"),
+                                   QObject::tr("New sing-box/xray update is available."));
+                });
+            } else if (report.needRestart) {
+                runOnUiThread([=] {
+                    MessageBoxInfo(QObject::tr("Core update"),
+                                   QObject::tr("Core update downloaded. Restart program to apply updates."));
+                });
+            } else if (report.downloaded && action == NekoGui_update::CoreAssetUpdateAction::CheckAndDownload) {
+                runOnUiThread([=] {
+                    MessageBoxInfo(QObject::tr("Core update"),
+                                   QObject::tr("Core update package has been downloaded."));
+                });
+            }
+        });
+    };
+    auto core_asset_auto_update_timer = new QTimer(this);
+    core_asset_auto_update_timer->setInterval(30 * 60 * 1000);
+    connect(core_asset_auto_update_timer, &QTimer::timeout, this, run_core_asset_auto_update);
+    core_asset_auto_update_timer->start();
+    setTimeout(run_core_asset_auto_update, this, 15000);
 
     if (!NekoGui::dataStore->flag_tray) show();
 }

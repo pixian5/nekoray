@@ -166,6 +166,8 @@ namespace NekoGui {
         int core_box_clash_api = -9090;
         QString core_box_clash_api_secret = "";
         QString core_box_underlying_dns = "";
+        int core_asset_auto_update_mode = 0; // 0=check only, 1=check+download, 2=install
+        long long core_asset_auto_update_last = 0;
 
         // Other Core
         ExtraCore *extraCore = new ExtraCore;

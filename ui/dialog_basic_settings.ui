@@ -581,6 +581,39 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="core_asset_auto_update_mode_l">
+           <property name="text">
+            <string>Scheduled update</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="core_asset_auto_update_mode">
+           <item>
+            <property name="text">
+             <string>Check only</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Check and download</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Install update</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="core_asset_update_now">
+           <property name="text">
+            <string>Update now</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="core_type_spacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

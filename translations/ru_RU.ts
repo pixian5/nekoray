@@ -219,6 +219,34 @@
         <source>Mixed (SOCKS+HTTP) Listen Port</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Scheduled update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check and download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Install update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some core files are waiting for restart to apply. Restart now?</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>DialogEditGroup</name>
@@ -1683,6 +1711,70 @@ Release note:
     </message>
     <message>
         <source>Speedtest finished.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New sing-box/xray update is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core update downloaded. Restart program to apply updates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core update package has been downloaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid release metadata response.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsupported archive format.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to start extractor: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extractor timed out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extractor failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to write pending file: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to stage update file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target file is in use.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to replace target file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>sing-box and xray are already up to date.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 cannot be auto-updated. Please update the program package.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>sing-box is embedded in nekobox_core. Please update Nekoray package to upgrade sing-box.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

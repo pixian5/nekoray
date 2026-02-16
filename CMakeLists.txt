@@ -134,6 +134,8 @@ set(PROJECT_SOURCES
         main/NekoGui.cpp
         main/NekoGui_Utils.cpp
         main/HTTPRequestHelper.cpp
+        main/CoreAssetUpdater.cpp
+        main/CoreAssetUpdater.hpp
 
         3rdparty/base64.cpp
         3rdparty/qrcodegen.cpp
