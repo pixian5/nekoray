@@ -50,6 +50,7 @@
 #include <QPushButton>
 #include <QDir>
 #include <QFileInfo>
+#include <QRegularExpression>
 
 void UI_InitMainWindow() {
     mainwindow = new MainWindow;
@@ -1591,9 +1592,19 @@ void MainWindow::show_log_impl(const QString &log) {
     auto lines = SplitLines(log.trimmed());
     if (lines.isEmpty()) return;
 
+    static const QRegularExpression kLogDateTimePrefix(
+        R"(^(?:\d{4}[/-]\d{2}[/-]\d{2}\s+)(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:\s+|$)(.*)$)");
+
     QStringList newLines;
     auto log_ignore = NekoGui::dataStore->log_ignore;
-    for (const auto &line: lines) {
+    for (auto line: lines) {
+        auto dateTimeMatch = kLogDateTimePrefix.match(line);
+        if (dateTimeMatch.hasMatch()) {
+            auto timePart = dateTimeMatch.captured(1);
+            auto rest = dateTimeMatch.captured(2);
+            line = rest.isEmpty() ? timePart : (timePart + " " + rest);
+        }
+
         bool showThisLine = true;
         for (const auto &str: log_ignore) {
             if (line.contains(str)) {

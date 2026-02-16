@@ -438,7 +438,7 @@ func (s *server) Test(ctx context.Context, in *gen.TestReq) (out *gen.TestResp, 
 
 	in.Url = strings.TrimSpace(in.Url)
 	if in.Url == "" {
-		in.Url = "http://cp.cloudflare.com/"
+		in.Url = "https://www.youtube.com/generate_204"
 	}
 	in.FullSpeedUrl = strings.TrimSpace(in.FullSpeedUrl)
 	if in.FullSpeedUrl == "" {

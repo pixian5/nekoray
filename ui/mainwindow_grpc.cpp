@@ -195,7 +195,7 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                     req.set_mode((libcore::TestMode) mode);
                     req.set_timeout(10 * 1000);
                     auto latencyUrl = NekoGui::dataStore->test_latency_url.trimmed();
-                    if (latencyUrl.isEmpty()) latencyUrl = "http://cp.cloudflare.com/";
+                    if (latencyUrl.isEmpty()) latencyUrl = "https://www.youtube.com/generate_204";
                     req.set_url(latencyUrl.toStdString());
 
                     //
@@ -343,7 +343,7 @@ void MainWindow::speedtest_current() {
         req.set_mode(libcore::UrlTest);
         req.set_timeout(10 * 1000);
         auto latencyUrl = NekoGui::dataStore->test_latency_url.trimmed();
-        if (latencyUrl.isEmpty()) latencyUrl = "http://cp.cloudflare.com/";
+        if (latencyUrl.isEmpty()) latencyUrl = "https://www.youtube.com/generate_204";
         req.set_url(latencyUrl.toStdString());
 
         bool rpcOK;
