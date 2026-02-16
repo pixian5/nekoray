@@ -1527,7 +1527,7 @@ End: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ctrl键+R</source>
+        <source>快捷键：Ctrl键+R</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

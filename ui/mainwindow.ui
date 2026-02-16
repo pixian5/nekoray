@@ -231,7 +231,7 @@
          <string>测试延迟</string>
         </property>
         <property name="toolTip">
-         <string>Ctrl键+R</string>
+         <string>快捷键：Ctrl键+R</string>
         </property>
         <property name="popupMode">
          <enum>QToolButton::InstantPopup</enum>
