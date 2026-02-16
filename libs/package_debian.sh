@@ -8,9 +8,6 @@ cp -r linux64 nekoray/opt/
 mv nekoray/opt/linux64 nekoray/opt/nekoray
 rm -rf nekoray/opt/nekoray/usr
 rm nekoray/opt/nekoray/launcher
-if [ -f nekoray/opt/nekoray/nekobox.png ] && [ ! -f nekoray/opt/nekoray/newbeeplus.png ]; then
-    cp nekoray/opt/nekoray/nekobox.png nekoray/opt/nekoray/newbeeplus.png
-fi
 
 # basic
 cat >nekoray/DEBIAN/control <<-EOF

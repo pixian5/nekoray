@@ -180,22 +180,14 @@ int main(int argc, char* argv[]) {
 
     // Load dataStore
     NekoGui::dataStore->fn = "groups/newbeeplus.json";
-    auto isLoaded = NekoGui::dataStore->Load();
-    if (!isLoaded && QFile::exists("groups/nekobox.json")) {
-        NekoGui::dataStore->fn = "groups/nekobox.json";
-        isLoaded = NekoGui::dataStore->Load();
-        if (isLoaded) {
-            NekoGui::dataStore->fn = "groups/newbeeplus.json";
-            NekoGui::dataStore->Save();
-        }
-    }
+    auto dataStoreLoaded = NekoGui::dataStore->Load();
 
     // Apply persisted core type
     if (NekoGui::dataStore->core_type == 1) {
         NekoGui::coreType = NekoGui::CoreType::XRAY;
         software_core_name = "Xray";
     }
-    if (!isLoaded) {
+    if (!dataStoreLoaded) {
         NekoGui::dataStore->Save();
     }
 
@@ -205,8 +197,8 @@ int main(int argc, char* argv[]) {
     // load routing
     NekoGui::dataStore->routing = std::make_unique<NekoGui::Routing>();
     NekoGui::dataStore->routing->fn = ROUTES_PREFIX + NekoGui::dataStore->active_routing;
-    isLoaded = NekoGui::dataStore->routing->Load();
-    if (!isLoaded) {
+    auto routingLoaded = NekoGui::dataStore->routing->Load();
+    if (!routingLoaded) {
         NekoGui::dataStore->routing->Save();
     }
 

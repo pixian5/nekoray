@@ -12,6 +12,8 @@ import (
 	"github.com/sagernet/sing-box/constant"
 )
 
+const runModeGuiCore = neko_common.RunMode_NekoRay_Core + 1
+
 func main() {
 	lines := make([]string, 0, 2)
 
@@ -35,7 +37,7 @@ func main() {
 
 	// GUI core mode
 	if len(os.Args) > 1 && os.Args[1] == "newbeeplus" {
-		neko_common.RunMode = neko_common.RunMode_NekoBox_Core
+		neko_common.RunMode = runModeGuiCore
 		grpc_server.RunCore(setupCore, &server{})
 		return
 	}

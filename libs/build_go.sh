@@ -24,6 +24,6 @@ popd
 #### Go: newbeeplus_core ####
 core_output="$DEST/newbeeplus_core"
 [ "$GOOS" == "windows" ] && core_output="$DEST/newbeeplus_core.exe" || true
-pushd go/cmd/nekobox_core
+pushd go/cmd/newbeeplus_core
 go build -v -o "$core_output" -trimpath -ldflags "-w -s -X github.com/matsuridayo/libneko/neko_common.Version_neko=$version_standalone" -tags "with_clash_api,with_gvisor,with_quic,with_wireguard,with_utls,with_ech"
 popd

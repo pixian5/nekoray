@@ -8,11 +8,6 @@ cp -r linux64 newbeeplus.AppDir
 
 rm newbeeplus.AppDir/launcher
 
-# Keep icon compatible with the old package layout.
-if [ -f newbeeplus.AppDir/nekobox.png ] && [ ! -f newbeeplus.AppDir/newbeeplus.png ]; then
-    cp newbeeplus.AppDir/nekobox.png newbeeplus.AppDir/newbeeplus.png
-fi
-
 cat >newbeeplus.AppDir/newbeeplus.desktop <<-EOF
 [Desktop Entry]
 Name=newbeeplus
