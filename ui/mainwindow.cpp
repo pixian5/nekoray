@@ -101,6 +101,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->toolButton_program->setMenu(ui->menu_program);
     ui->toolButton_preferences->setMenu(ui->menu_preferences);
     ui->toolButton_server->setMenu(ui->menu_server);
+    ui->horizontalLayout_2->removeWidget(ui->toolButton_url_test);
+    ui->horizontalLayout_2->insertWidget(ui->horizontalLayout_2->indexOf(ui->toolButton_update) + 1, ui->toolButton_url_test);
+    ui->toolButton_url_test->setFixedHeight(ui->toolButton_update->sizeHint().height());
     ui->menubar->setVisible(false);
     connect(ui->toolButton_document, &QToolButton::clicked, this, [=] { QDesktopServices::openUrl(QUrl("https://matsuridayo.github.io/")); });
     connect(ui->toolButton_ads, &QToolButton::clicked, this, [=] { QDesktopServices::openUrl(QUrl("https://neko-box.pages.dev/喵")); });
