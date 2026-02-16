@@ -176,6 +176,23 @@ namespace NekoGui_sub {
         }
     }
 
+    QString NodeFirstString(const YAML::Node &n, const QString &def = "") {
+        try {
+            if (!n.IsDefined()) return def;
+            if (n.IsSequence()) {
+                for (auto item: n) {
+                    auto s = Node2QString(item);
+                    if (!s.isEmpty()) return s;
+                }
+                return def;
+            }
+            return Node2QString(n, def);
+        } catch (const YAML::Exception &ex) {
+            qDebug() << ex.what();
+            return def;
+        }
+    }
+
     int Node2Int(const YAML::Node &n, const int &def = 0) {
         try {
             return n.as<int>();
@@ -325,6 +342,25 @@ namespace NekoGui_sub {
                         bean->stream->path = Node2QString(grpc["grpc-service-name"]);
                     }
 
+                    auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
+                    if (xhttp.IsMap()) {
+                        bean->stream->path = NodeFirstString(xhttp["path"]);
+                        auto xhttpHost = NodeFirstString(xhttp["host"]);
+                        if (xhttpHost.isEmpty()) {
+                            auto headers = xhttp["headers"];
+                            if (headers.IsMap()) {
+                                for (auto header: headers) {
+                                    if (Node2QString(header.first).toLower() == "host") {
+                                        xhttpHost = NodeFirstString(header.second);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        bean->stream->host = xhttpHost;
+                        bean->stream->xhttp_mode = Node2QString(xhttp["mode"]);
+                    }
+
                     auto reality = NodeChild(proxy, {"reality-opts"});
                     if (reality.IsMap()) {
                         bean->stream->reality_pbk = Node2QString(reality["public-key"]);
@@ -376,6 +412,25 @@ namespace NekoGui_sub {
                     auto grpc = NodeChild(proxy, {"grpc-opts", "grpc-opt"});
                     if (grpc.IsMap()) {
                         bean->stream->path = Node2QString(grpc["grpc-service-name"]);
+                    }
+
+                    auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
+                    if (xhttp.IsMap()) {
+                        bean->stream->path = NodeFirstString(xhttp["path"]);
+                        auto xhttpHost = NodeFirstString(xhttp["host"]);
+                        if (xhttpHost.isEmpty()) {
+                            auto headers = xhttp["headers"];
+                            if (headers.IsMap()) {
+                                for (auto header: headers) {
+                                    if (Node2QString(header.first).toLower() == "host") {
+                                        xhttpHost = NodeFirstString(header.second);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        bean->stream->host = xhttpHost;
+                        bean->stream->xhttp_mode = Node2QString(xhttp["mode"]);
                     }
 
                     auto h2 = NodeChild(proxy, {"h2-opts", "h2-opt"});
@@ -464,6 +519,9 @@ namespace NekoGui_sub {
     // 在新的 thread 运行
     void GroupUpdater::AsyncUpdate(const QString &str, int _sub_gid, const std::function<void()> &finish) {
         auto content = str.trimmed();
+        if (!content.isEmpty() && !content.contains("://") && content.contains(".") && !content.contains("\n")) {
+            content = "https://" + content;
+        }
         bool asURL = false;
         bool createNewGroup = false;
 
