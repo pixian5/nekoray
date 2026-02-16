@@ -917,6 +917,14 @@ void MainWindow::refresh_status(const QString &traffic_update) {
     }
 
     auto make_title = [=](bool isTray) {
+        auto runtimeVersion = [&]() {
+            auto v = QString(NKR_VERSION);
+            auto versionPath = QDir::cleanPath(QApplication::applicationDirPath() + "/../nekoray_version.txt");
+            auto fileVersion = ReadFileText(versionPath).trimmed();
+            if (!fileVersion.isEmpty()) v = fileVersion;
+            return v;
+        }();
+
         QStringList tt;
         if (!isTray && NekoGui::IsAdmin()) tt << "[Admin]";
         if (select_mode) tt << "[" + tr("Select") + "]";
@@ -925,7 +933,7 @@ void MainWindow::refresh_status(const QString &traffic_update) {
         if (!NekoGui::dataStore->spmode_vpn && NekoGui::dataStore->spmode_system_proxy) tt << "[" + tr("System Proxy") + "]";
         if (NekoGui::dataStore->spmode_vpn && NekoGui::dataStore->spmode_system_proxy) tt << "[Tun+" + tr("System Proxy") + "]";
         if (!isTray) {
-            tt << QStringLiteral("%1 %2").arg(software_name, QString(NKR_VERSION));
+            tt << QStringLiteral("%1 %2").arg(software_name, runtimeVersion);
         } else {
             tt << software_name;
         }
