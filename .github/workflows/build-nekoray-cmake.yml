@@ -90,6 +90,7 @@ jobs:
             mingw-w64-x86_64-protobuf
             mingw-w64-x86_64-yaml-cpp
             mingw-w64-x86_64-zxing-cpp
+            mingw-w64-x86_64-ntldd
       - name: Build C++
         run: |
           mkdir -p build && cd build
@@ -116,31 +117,9 @@ jobs:
           cp $QT_PLUGIN_DIR/iconengines/*.dll iconengines/ 2>/dev/null || true
           cp $QT_PLUGIN_DIR/imageformats/*.dll imageformats/ 2>/dev/null || true
           cp $QT_PLUGIN_DIR/styles/*.dll styles/ 2>/dev/null || true
-          # MinGW runtime
-          for dll in libwinpthread-1.dll libgcc_s_seh-1.dll libstdc++-6.dll; do
-            cp /mingw64/bin/$dll .
-          done
-          # Library DLLs
-          cp /mingw64/bin/libZXing.dll . 2>/dev/null || cp /mingw64/bin/libzxing*.dll . 2>/dev/null || true
-          cp /mingw64/bin/libprotobuf*.dll .
-          cp /mingw64/bin/libyaml-cpp.dll .
-          cp /mingw64/bin/libabsl_*.dll .
-          cp /mingw64/bin/libutf8_validity.dll .
-          # OpenSSL for HTTPS
-          cp /mingw64/bin/libssl-3-x64.dll .
-          cp /mingw64/bin/libcrypto-3-x64.dll .
-          # Indirect dependencies
-          for dll in libpng16-16.dll zlib1.dll libharfbuzz-0.dll libfreetype-6.dll \
-                     libgraphite2.dll libdouble-conversion.dll libpcre2-16-0.dll \
-                     libpcre2-8-0.dll libzstd.dll libmd4c.dll libglib-2.0-0.dll \
-                     libbz2-1.dll libiconv-2.dll libintl-8.dll libbrotlidec.dll \
-                     libbrotlicommon.dll; do
-            cp /mingw64/bin/$dll . 2>/dev/null || true
-          done
-          # ICU version varies across MSYS2 updates
-          cp /mingw64/bin/libicuin*.dll . 2>/dev/null || true
-          cp /mingw64/bin/libicuuc*.dll . 2>/dev/null || true
-          cp /mingw64/bin/libicudt*.dll . 2>/dev/null || true
+          # 自动收集所有 MinGW DLL 依赖
+          cd $OLDPWD
+          bash libs/collect_dlls_mingw.sh $DEST
       - name: Tar artifacts
         run: tar czvf artifacts.tgz ./deployment
       - uses: actions/upload-artifact@v4

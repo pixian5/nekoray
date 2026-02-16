@@ -552,6 +552,50 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <layout class="QHBoxLayout" name="core_type_layout">
+         <item>
+          <widget class="QLabel" name="label_core_type">
+           <property name="text">
+            <string>Core</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="core_type">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string notr="true">sing-box</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string notr="true">Xray</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <spacer name="core_type_spacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_core">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">

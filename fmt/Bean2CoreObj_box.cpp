@@ -162,7 +162,7 @@ namespace NekoGui_fmt {
                 flow = "";
             }
             outbound["uuid"] = password.trimmed();
-            outbound["flow"] = flow;
+            if (!flow.isEmpty()) outbound["flow"] = flow;
         } else {
             outbound["password"] = password;
         }

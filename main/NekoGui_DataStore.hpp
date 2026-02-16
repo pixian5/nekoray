@@ -161,6 +161,7 @@ namespace NekoGui {
         QString hotkey_system_proxy_menu = "";
 
         // Core
+        int core_type = 0; // 0=sing-box, 1=xray
         int core_box_clash_api = -9090;
         QString core_box_clash_api_secret = "";
         QString core_box_underlying_dns = "";

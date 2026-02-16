@@ -301,6 +301,11 @@ namespace NekoGui {
                 extR.tag = ent->bean->DisplayType();
                 status->result->extRs.emplace_back(std::make_shared<NekoGui_fmt::ExternalBuildResult>(extR));
 
+                // Store socks port of the first external core for direct testing
+                if (isFirstProfile && status->result->extSocksPort == 0) {
+                    status->result->extSocksPort = ext_socks_port;
+                }
+
                 // SOCKS OUTBOUND
                 outbound["type"] = "socks";
                 outbound["server"] = "127.0.0.1";
@@ -340,7 +345,7 @@ namespace NekoGui {
                     needMux = false;
                 }
             }
-            if (ent->type == "vless" && outbound["flow"] != "") {
+            if (ent->type == "vless" && outbound.contains("flow") && outbound.value("flow").toString() != "") {
                 needMux = false;
             }
 

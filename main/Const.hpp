@@ -20,6 +20,7 @@ namespace NekoGui {
         enum CoreType {
             V2RAY, // DO NOT USE
             SING_BOX,
+            XRAY,
         };
     }
 } // namespace NekoGui

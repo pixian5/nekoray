@@ -176,15 +176,14 @@ int main(int argc, char* argv[]) {
     }
 
     // Load dataStore
-    switch (NekoGui::coreType) {
-        case NekoGui::CoreType::SING_BOX:
-            NekoGui::dataStore->fn = "groups/nekobox.json";
-            break;
-        default:
-            MessageBoxWarning("Error", "Unknown coreType.");
-            return 0;
-    }
+    NekoGui::dataStore->fn = "groups/nekobox.json";
     auto isLoaded = NekoGui::dataStore->Load();
+
+    // Apply persisted core type
+    if (NekoGui::dataStore->core_type == 1) {
+        NekoGui::coreType = NekoGui::CoreType::XRAY;
+        software_core_name = "Xray";
+    }
     if (!isLoaded) {
         NekoGui::dataStore->Save();
     }

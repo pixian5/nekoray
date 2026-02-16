@@ -279,6 +279,7 @@ namespace NekoGui {
         _add(new configItem("max_log_line", &max_log_line, itemType::integer));
         _add(new configItem("splitter_state", &splitter_state, itemType::string));
         _add(new configItem("utlsFingerprint", &utlsFingerprint, itemType::string));
+        _add(new configItem("core_type", &core_type, itemType::integer));
         _add(new configItem("core_box_clash_api", &core_box_clash_api, itemType::integer));
         _add(new configItem("core_box_clash_api_secret", &core_box_clash_api_secret, itemType::string));
         _add(new configItem("core_box_underlying_dns", &core_box_underlying_dns, itemType::string));
@@ -386,8 +387,19 @@ namespace NekoGui {
     QString ExtraCore::Get(const QString &id) const {
         auto obj = QString2QJsonObject(core_map);
         for (const auto &c: obj.keys()) {
-            if (c == id) return obj[id].toString();
+            if (c == id) {
+                auto val = obj[id].toString();
+                if (!val.isEmpty()) return val;
+            }
         }
+        // 自动查找同目录下的可执行文件
+        auto appDir = QApplication::applicationDirPath();
+#ifdef Q_OS_WIN
+        auto candidate = appDir + "/" + id + ".exe";
+#else
+        auto candidate = appDir + "/" + id;
+#endif
+        if (QFile::exists(candidate)) return candidate;
         return "";
     }
 

@@ -64,6 +64,33 @@ namespace NekoGui_fmt {
         return 1;
     }
 
+    // Xray mode: route VMess/VLESS/Trojan/SS through external xray process
+
+    static int NeedExternalXray(bool isFirstProfile) {
+        if (NekoGui::coreType != NekoGui::CoreType::XRAY) return 0;
+        if (isFirstProfile) {
+            if (NekoGui::dataStore->spmode_vpn) return 1;
+            return 2;
+        }
+        return 1;
+    }
+
+    int VMessBean::NeedExternal(bool isFirstProfile) {
+        return NeedExternalXray(isFirstProfile);
+    }
+
+    int TrojanVLESSBean::NeedExternal(bool isFirstProfile) {
+        return NeedExternalXray(isFirstProfile);
+    }
+
+    int ShadowSocksBean::NeedExternal(bool isFirstProfile) {
+        return NeedExternalXray(isFirstProfile);
+    }
+
+    int SocksHttpBean::NeedExternal(bool isFirstProfile) {
+        return NeedExternalXray(isFirstProfile);
+    }
+
     ExternalBuildResult NaiveBean::BuildExternal(int mapping_port, int socks_port, int external_stat) {
         ExternalBuildResult result{NekoGui::dataStore->extraCore->Get("naive")};
 

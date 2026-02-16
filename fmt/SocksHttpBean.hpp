@@ -28,6 +28,12 @@ namespace NekoGui_fmt {
 
         CoreObjOutboundBuildResult BuildCoreObjSingBox() override;
 
+        CoreObjOutboundBuildResult BuildCoreObjXray() override;
+
+        int NeedExternal(bool isFirstProfile) override;
+
+        ExternalBuildResult BuildExternal(int mapping_port, int socks_port, int external_stat) override;
+
         bool TryParseLink(const QString &link);
 
         QString ToShareLink() override;

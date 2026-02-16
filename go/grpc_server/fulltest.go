@@ -39,6 +39,16 @@ func getBetweenStr(str, start, end string) string {
 func DoFullTest(ctx context.Context, in *gen.TestReq, instance interface{}) (out *gen.TestResp, _ error) {
 	out = &gen.TestResp{}
 	httpClient := neko_common.CreateProxyHttpClient(instance)
+	return doFullTestInternal(ctx, in, httpClient, instance)
+}
+
+func DoFullTestWithHttpClient(ctx context.Context, in *gen.TestReq, httpClient *http.Client) (out *gen.TestResp, _ error) {
+	out = &gen.TestResp{}
+	return doFullTestInternal(ctx, in, httpClient, nil)
+}
+
+func doFullTestInternal(ctx context.Context, in *gen.TestReq, httpClient *http.Client, instance interface{}) (out *gen.TestResp, _ error) {
+	out = &gen.TestResp{}
 
 	// Latency
 	var latency string
@@ -55,38 +65,43 @@ func DoFullTest(ctx context.Context, in *gen.TestReq, instance interface{}) (out
 	// UDP Latency
 	var udpLatency string
 	if in.FullUdpLatency {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		result := make(chan string)
+		if instance == nil {
+			// External core: UDP via SOCKS5 is not supported
+			udpLatency = "N/A"
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+			result := make(chan string)
 
-		go func() {
-			var startTime = time.Now()
-			pc, err := neko_common.DialContext(ctx, instance, "udp", "8.8.8.8:53")
-			if err == nil {
-				defer pc.Close()
-				dnsPacket, _ := hex.DecodeString("0000010000010000000000000377777706676f6f676c6503636f6d0000010001")
-				_, err = pc.Write(dnsPacket)
+			go func() {
+				var startTime = time.Now()
+				pc, err := neko_common.DialContext(ctx, instance, "udp", "8.8.8.8:53")
 				if err == nil {
-					var buf [1400]byte
-					_, err = pc.Read(buf[:])
+					defer pc.Close()
+					dnsPacket, _ := hex.DecodeString("0000010000010000000000000377777706676f6f676c6503636f6d0000010001")
+					_, err = pc.Write(dnsPacket)
+					if err == nil {
+						var buf [1400]byte
+						_, err = pc.Read(buf[:])
+					}
 				}
-			}
-			if err == nil {
-				var endTime = time.Now()
-				result <- fmt.Sprint(endTime.Sub(startTime).Abs().Milliseconds(), "ms")
-			} else {
-				log.Println("UDP Latency test error:", err)
-				result <- "Error"
-			}
-			close(result)
-		}()
+				if err == nil {
+					var endTime = time.Now()
+					result <- fmt.Sprint(endTime.Sub(startTime).Abs().Milliseconds(), "ms")
+				} else {
+					log.Println("UDP Latency test error:", err)
+					result <- "Error"
+				}
+				close(result)
+			}()
 
-		select {
-		case <-ctx.Done():
-			udpLatency = "Timeout"
-		case r := <-result:
-			udpLatency = r
+			select {
+			case <-ctx.Done():
+				udpLatency = "Timeout"
+			case r := <-result:
+				udpLatency = r
+			}
+			cancel()
 		}
-		cancel()
 	}
 
 	// 入口 IP

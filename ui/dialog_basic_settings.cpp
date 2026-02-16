@@ -154,12 +154,17 @@ DialogBasicSettings::DialogBasicSettings(QWidget *parent)
 
     // Core
 
+    ui->core_type->setCurrentIndex(NekoGui::dataStore->core_type);
+    connect(ui->core_type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](int) {
+        CACHE.needRestart = true;
+    });
     ui->groupBox_core->setTitle(software_core_name);
     //
     CACHE.extraCore = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
     if (!CACHE.extraCore.contains("naive")) CACHE.extraCore.insert("naive", "");
     if (!CACHE.extraCore.contains("hysteria2")) CACHE.extraCore.insert("hysteria2", "");
     if (!CACHE.extraCore.contains("tuic")) CACHE.extraCore.insert("tuic", "");
+    if (!CACHE.extraCore.contains("xray")) CACHE.extraCore.insert("xray", "");
     //
     auto extra_core_layout = ui->extra_core_box_scrollAreaWidgetContents->layout();
     for (const auto &s: CACHE.extraCore.keys()) {
@@ -267,6 +272,7 @@ void DialogBasicSettings::accept() {
 
     // Core
 
+    NekoGui::dataStore->core_type = ui->core_type->currentIndex();
     NekoGui::dataStore->extraCore->core_map = QJsonObject2QString(CACHE.extraCore, true);
 
     // Mux

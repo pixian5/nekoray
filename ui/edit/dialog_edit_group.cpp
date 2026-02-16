@@ -78,7 +78,11 @@ void DialogEditGroup::accept() {
         }
     }
     ent->name = ui->name->text();
-    ent->url = ui->url->text();
+    auto url = ui->url->text().trimmed();
+    if (!url.isEmpty() && !url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+    }
+    ent->url = url;
     ent->archive = ui->archive->isChecked();
     ent->skip_auto_update = ui->skip_auto_update->isChecked();
     ent->manually_column_width = ui->manually_column_width->isChecked();
