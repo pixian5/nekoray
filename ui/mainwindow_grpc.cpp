@@ -227,13 +227,16 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                                 DS_cores);
                             extSem.acquire();
                             if (!extReady) {
+                                QSemaphore killSem;
                                 runOnUiThread(
-                                    [&] {
+                                    [extCs, &killSem] {
                                         for (const auto &extC: extCs) {
                                             extC->Kill();
                                         }
+                                        killSem.release();
                                     },
                                     DS_cores);
+                                killSem.acquire();
                                 profile->latency = -1;
                                 profile->full_test_report = "External core SOCKS5 startup timeout";
                                 profile->Save();
@@ -275,15 +278,16 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                     auto result = defaultClient->Test(&rpcOK, req);
                     //
                     if (!extCs.empty()) {
+                        QSemaphore killSem;
                         runOnUiThread(
-                            [&] {
+                            [extCs, &killSem] {
                                 for (const auto &extC: extCs) {
                                     extC->Kill();
                                 }
-                                extSem.release();
+                                killSem.release();
                             },
                             DS_cores);
-                        extSem.acquire();
+                        killSem.acquire();
                     }
                     //
                     if (!rpcOK) {
