@@ -924,8 +924,11 @@ void MainWindow::refresh_status(const QString &traffic_update) {
         if (NekoGui::dataStore->spmode_vpn && !NekoGui::dataStore->spmode_system_proxy) tt << "[Tun]";
         if (!NekoGui::dataStore->spmode_vpn && NekoGui::dataStore->spmode_system_proxy) tt << "[" + tr("System Proxy") + "]";
         if (NekoGui::dataStore->spmode_vpn && NekoGui::dataStore->spmode_system_proxy) tt << "[Tun+" + tr("System Proxy") + "]";
-        tt << software_name;
-        if (!isTray) tt << "(" + QString(NKR_VERSION) + ")";
+        if (!isTray) {
+            tt << QStringLiteral("%1 %2").arg(software_name, QString(NKR_VERSION));
+        } else {
+            tt << software_name;
+        }
         if (!NekoGui::dataStore->active_routing.isEmpty() && NekoGui::dataStore->active_routing != "Default") {
             tt << "[" + NekoGui::dataStore->active_routing + "]";
         }
