@@ -243,6 +243,9 @@ namespace NekoGui {
                 status->result->error = "This configuration cannot be set automatically, please try another.";
                 return {};
             }
+            if (thisExternalStat == 1) {
+                status->result->extHasMapping = true;
+            }
 
             // determine port
             if (thisExternalStat > 0) {

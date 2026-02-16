@@ -15,6 +15,7 @@ namespace NekoGui {
 
         std::list<std::shared_ptr<NekoGui_fmt::ExternalBuildResult>> extRs;
         int extSocksPort = 0; // socks port of the first external core (for direct test)
+        bool extHasMapping = false; // true when external outbounds rely on sing-box mapping inbound
     };
 
     class BuildConfigStatus {

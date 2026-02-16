@@ -252,10 +252,12 @@ void MainWindow::speedtest_current_group(int mode, bool test_group) {
                         }
                         //
                         auto config = new libcore::LoadConfigReq;
-                        if (c->extSocksPort > 0) {
-                            // External core: pass SOCKS5 port marker instead of sing-box config
+                        auto canUseExternalSocksShortcut = c->extSocksPort > 0 && c->extRs.size() == 1 && !c->extHasMapping;
+                        if (canUseExternalSocksShortcut) {
+                            // External core direct mode: pass SOCKS5 port marker instead of sing-box config.
                             config->set_core_config("EXTERNAL_SOCKS:" + std::to_string(c->extSocksPort));
                         } else {
+                            // Mapping/chain mode requires sing-box test instance.
                             config->set_core_config(QJsonObject2QString(c->coreConfig, false).toStdString());
                         }
                         req.set_allocated_config(config);
