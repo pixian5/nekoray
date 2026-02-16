@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(nekobox VERSION 0.1 LANGUAGES CXX)
+set(NKR_PROJECT_VERSION "0.0.1")
+if (EXISTS "${CMAKE_SOURCE_DIR}/nekoray_version.txt")
+    file(STRINGS "${CMAKE_SOURCE_DIR}/nekoray_version.txt" NKR_PROJECT_VERSION LIMIT_COUNT 1)
+endif ()
+if (NOT NKR_PROJECT_VERSION)
+    set(NKR_PROJECT_VERSION "0.0.1")
+endif ()
+
+project(nekobox VERSION ${NKR_PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

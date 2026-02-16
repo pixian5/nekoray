@@ -10,6 +10,10 @@ generate_product_version(
         COMPANY_NAME "nekobox"
         COMPANY_COPYRIGHT "nekobox"
         FILE_DESCRIPTION "nekobox"
+        VERSION_MAJOR ${PROJECT_VERSION_MAJOR}
+        VERSION_MINOR ${PROJECT_VERSION_MINOR}
+        VERSION_PATCH ${PROJECT_VERSION_PATCH}
+        VERSION_REVISION 0
 )
 add_definitions(-DUNICODE -D_UNICODE -DNOMINMAX)
 set(GUI_TYPE WIN32)
