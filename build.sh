@@ -2,25 +2,24 @@
 set -e
 
 # ============================================================
-# nekoray 一键编译脚本 (Windows MSYS2 MinGW64)
-# 用法: 在 MSYS2 MinGW64 终端运行 bash build.sh
+# nekoray 涓€閿紪璇戣剼鏈?(Windows MSYS2 MinGW64)
+# 鐢ㄦ硶: 鍦?MSYS2 MinGW64 缁堢杩愯 bash build.sh
 #
-# 功能:
-#   1. 杀掉旧的 newbeeplus/xray 进程
-#   2. 安装 MSYS2 依赖包
-#   3. 初始化 Git 子模块 + Go 依赖
-#   4. 编译 Go 后端 (newbeeplus_core.exe, updater.exe)
-#   5. 编译 C++ GUI (newbeeplus.exe)
-#   6. 复制运行依赖到 build/ (开发调试用)
-#   7. 打包到 dist/nekoray/ (发布用)
-#   8. 自动配置外部核心路径
-#   9. 启动 newbeeplus
+# 鍔熻兘:
+#   1. 鏉€鎺夋棫鐨?newbeeplus/xray 杩涚▼
+#   2. 瀹夎 MSYS2 渚濊禆鍖?#   3. 鍒濆鍖?Git 瀛愭ā鍧?+ Go 渚濊禆
+#   4. 缂栬瘧 Go 鍚庣 (newbeeplus_core.exe, updater.exe)
+#   5. 缂栬瘧 C++ GUI (newbeeplus.exe)
+#   6. 澶嶅埗杩愯渚濊禆鍒?build/ (寮€鍙戣皟璇曠敤)
+#   7. 鎵撳寘鍒?dist/nekoray/ (鍙戝竷鐢?
+#   8. 鑷姩閰嶇疆澶栭儴鏍稿績璺緞
+#   9. 鍚姩 newbeeplus
 # ============================================================
 
 SRC_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$SRC_ROOT"
 
-# geodata 下载源 (共用)
+# geodata 涓嬭浇婧?(鍏辩敤)
 GEODATA_URLS=(
     "geoip.db|https://github.com/SagerNet/sing-geoip/releases/latest/download/geoip.db"
     "geosite.db|https://github.com/SagerNet/sing-geosite/releases/latest/download/geosite.db"
@@ -28,24 +27,25 @@ GEODATA_URLS=(
     "geosite.dat|https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
 )
 
-# 下载 geodata 到指定目录
+# Download geodata to destination
 download_geodata() {
     local dest="$1"
     for entry in "${GEODATA_URLS[@]}"; do
         local fname="${entry%%|*}"
         local url="${entry##*|}"
         if [ ! -f "$dest/$fname" ]; then
-            echo "  下载 $fname -> $dest/"
-            curl -fLso "$dest/$fname" "$url" || echo "  警告: 下载 $fname 失败"
+            echo "  涓嬭浇 $fname -> $dest/"
+            curl -fLso "$dest/$fname" "$url" || echo "  璀﹀憡: 涓嬭浇 $fname 澶辫触"
         fi
     done
 }
 
-# 下载 Xray 到指定目录
+# Download Xray to destination
 download_xray() {
     local dest="$1"
     if [ ! -f "$dest/xray.exe" ]; then
-        echo "  下载 Xray -> $dest/"
+        echo "  涓嬭浇 Xray -> $dest/"
+        rm -f /tmp/xray_dl.zip
         local ver
         ver=$(curl -fLs "https://api.github.com/repos/XTLS/Xray-core/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
         if [ -n "$ver" ]; then
@@ -53,15 +53,15 @@ download_xray() {
                 "https://github.com/XTLS/Xray-core/releases/download/${ver}/Xray-windows-64.zip" \
                 && unzip -o /tmp/xray_dl.zip xray.exe -d "$dest/" \
                 && echo "  Xray $ver -> $dest/xray.exe" \
-                || echo "  警告: 下载 Xray 失败"
+                || echo "  璀﹀憡: 涓嬭浇 Xray 澶辫触"
             rm -f /tmp/xray_dl.zip
         else
-            echo "  警告: 无法获取 Xray 版本号"
+            echo "  Warning: failed to fetch Xray version"
         fi
     fi
 }
 
-# 写入 xray 路径到 newbeeplus.json 配置
+# 鍐欏叆 xray 璺緞鍒?newbeeplus.json 閰嶇疆
 patch_xray_config() {
     local cfg="$1"
     local xray_exe="$2"
@@ -70,18 +70,18 @@ patch_xray_config() {
         win_path=$(cygpath -w "$xray_exe" | sed 's/\\/\\\\\\\\/g')
         if grep -q '"xray":""' "$cfg"; then
             sed -i "s|\"xray\":\"\"|\"xray\":\"${win_path}\"|" "$cfg"
-            echo "  已写入 xray 路径: $(cygpath -w "$xray_exe")"
+            echo "  宸插啓鍏?xray 璺緞: $(cygpath -w "$xray_exe")"
         else
-            echo "  xray 路径已存在，跳过"
+            echo "  xray 璺緞宸插瓨鍦紝璺宠繃"
         fi
     fi
 }
 
-# ── Phase 0: 环境检测 ──────────────────────────────────────
+# 鈹€鈹€ Phase 0: 鐜妫€娴?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 if [ "$MSYSTEM" != "MINGW64" ]; then
-    echo "错误: 请在 MSYS2 MinGW64 终端中运行此脚本"
-    echo "  打开方式: 开始菜单 -> MSYS2 MinGW 64-bit"
+    echo "閿欒: 璇峰湪 MSYS2 MinGW64 缁堢涓繍琛屾鑴氭湰"
+    echo "  鎵撳紑鏂瑰紡: 寮€濮嬭彍鍗?-> MSYS2 MinGW 64-bit"
     exit 1
 fi
 
@@ -108,8 +108,8 @@ if ! command -v go &>/dev/null; then
     done
 fi
 if ! command -v go &>/dev/null; then
-    echo "错误: 未找到 Go 编译器，请先安装 Go >= 1.22"
-    echo "  下载: https://go.dev/dl/"
+    echo "閿欒: 鏈壘鍒?Go 缂栬瘧鍣紝璇峰厛瀹夎 Go >= 1.22"
+    echo "  涓嬭浇: https://go.dev/dl/"
     exit 1
 fi
 
@@ -117,26 +117,26 @@ GO_VER=$(go version | grep -oP '\d+\.\d+' | head -1)
 GO_MAJOR=$(echo "$GO_VER" | cut -d. -f1)
 GO_MINOR=$(echo "$GO_VER" | cut -d. -f2)
 if [ "$GO_MAJOR" -lt 1 ] || { [ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -lt 22 ]; }; then
-    echo "错误: Go 版本 $GO_VER 太低，需要 >= 1.22"
+    echo "閿欒: Go 鐗堟湰 $GO_VER 澶綆锛岄渶瑕?>= 1.22"
     exit 1
 fi
 
-echo "=== 环境检测通过 ==="
+echo "=== 鐜妫€娴嬮€氳繃 ==="
 echo "  MSYS2 MinGW64, Go $GO_VER"
 
-# ── Phase 1: 杀掉旧进程 ──────────────────────────────────
+# 鈹€鈹€ Phase 1: 鏉€鎺夋棫杩涚▼ 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 结束旧进程 ==="
-taskkill //F //IM newbeeplus.exe 2>/dev/null && echo "  已结束 newbeeplus.exe" || true
-taskkill //F //IM newbeeplus_core.exe 2>/dev/null && echo "  已结束 newbeeplus_core.exe" || true
-taskkill //F //IM xray.exe 2>/dev/null && echo "  已结束 xray.exe" || true
+echo "=== 缁撴潫鏃ц繘绋?==="
+taskkill //F //IM newbeeplus.exe 2>/dev/null && echo "  宸茬粨鏉?newbeeplus.exe" || true
+taskkill //F //IM newbeeplus_core.exe 2>/dev/null && echo "  宸茬粨鏉?newbeeplus_core.exe" || true
+taskkill //F //IM xray.exe 2>/dev/null && echo "  宸茬粨鏉?xray.exe" || true
 sleep 1
 
-# ── Phase 2: 安装 MSYS2 依赖包 ─────────────────────────────
+# 鈹€鈹€ Phase 2: 瀹夎 MSYS2 渚濊禆鍖?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 安装 MSYS2 依赖包 ==="
+echo "=== 瀹夎 MSYS2 渚濊禆鍖?==="
 pacman -S --noconfirm --needed \
     mingw-w64-x86_64-toolchain \
     mingw-w64-x86_64-cmake \
@@ -149,20 +149,20 @@ pacman -S --noconfirm --needed \
     mingw-w64-x86_64-zxing-cpp \
     mingw-w64-x86_64-ntldd
 
-# ── Phase 3: Git 子模块 + Go 依赖 ─────────────────────────
+# 鈹€鈹€ Phase 3: Git 瀛愭ā鍧?+ Go 渚濊禆 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 初始化 Git 子模块 ==="
+echo "=== 鍒濆鍖?Git 瀛愭ā鍧?==="
 git submodule update --init --recursive
 
 echo ""
-echo "=== 获取 Go 依赖源码 ==="
+echo "=== 鑾峰彇 Go 渚濊禆婧愮爜 ==="
 bash libs/get_source.sh
 
-# ── Phase 4: 编译 Go 后端 ──────────────────────────────────
+# 鈹€鈹€ Phase 4: 缂栬瘧 Go 鍚庣 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 编译 Go 后端 ==="
+echo "=== 缂栬瘧 Go 鍚庣 ==="
 export GOOS=windows
 export GOARCH=amd64
 export GOPATH="${GOPATH:-$HOME/go}"
@@ -172,10 +172,10 @@ export GOCACHE="$SRC_ROOT/.cache/go-build"
 mkdir -p "$GOCACHE" "$GOMODCACHE"
 bash libs/build_go.sh
 
-# ── Phase 5: 编译 C++ GUI ──────────────────────────────────
+# 鈹€鈹€ Phase 5: 缂栬瘧 C++ GUI 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 编译 C++ GUI ==="
+echo "=== 缂栬瘧 C++ GUI ==="
 mkdir -p build
 cd build
 cmake -G Ninja \
@@ -186,47 +186,47 @@ cmake -G Ninja \
 ninja
 cd "$SRC_ROOT"
 
-# ── Phase 6: 准备 build 目录运行环境 (开发调试用) ──────────
+# 鈹€鈹€ Phase 6: 鍑嗗 build 鐩綍杩愯鐜 (寮€鍙戣皟璇曠敤) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 准备 build/ 运行环境 ==="
+echo "=== 鍑嗗 build/ 杩愯鐜 ==="
 
-# 复制 Go 后端
+# 澶嶅埗 Go 鍚庣
+mkdir -p build/core
 if [ -f deployment/windows64/newbeeplus_core.exe ]; then
-    cp deployment/windows64/newbeeplus_core.exe build/
-    echo "  newbeeplus_core.exe -> build/"
+    cp deployment/windows64/newbeeplus_core.exe build/core/
+    echo "  newbeeplus_core.exe -> build/core/"
 fi
 
-# 下载 geodata 到 build/
+# 涓嬭浇 geodata 鍒?build/
 download_geodata "build"
 
-# 下载 Xray 到 build/xray_core/
-mkdir -p build/xray_core
-download_xray "build/xray_core"
+# 涓嬭浇 Xray 鍒?build/core/
+download_xray "build/core"
 
-# 写入 build 目录的 xray 配置
-patch_xray_config "build/config/groups/newbeeplus.json" "$SRC_ROOT/build/xray_core/xray.exe"
+# 鍐欏叆 build 鐩綍鐨?xray 閰嶇疆
+patch_xray_config "build/config/groups/newbeeplus.json" "$SRC_ROOT/build/core/xray.exe"
 
-# ── Phase 7: 打包到 dist/nekoray/ (发布用) ─────────────────
+# 鈹€鈹€ Phase 7: 鎵撳寘鍒?dist/nekoray/ (鍙戝竷鐢? 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 打包到 dist/nekoray/ ==="
+echo "=== 鎵撳寘鍒?dist/nekoray/ ==="
 
 DIST="$SRC_ROOT/dist/nekoray"
 rm -rf "$DIST"
-mkdir -p "$DIST"
+mkdir -p "$DIST/core"
 
-# 复制 GUI
+# 澶嶅埗 GUI
 cp build/newbeeplus.exe "$DIST/"
 
-# windeployqt 收集 Qt DLL
+# windeployqt 鏀堕泦 Qt DLL
 pushd "$DIST" > /dev/null
 windeployqt-qt5.exe newbeeplus.exe --no-compiler-runtime --no-opengl-sw 2>&1 || true
 rm -rf translations
 rm -f libEGL.dll libGLESv2.dll
 popd > /dev/null
 
-# Qt 插件
+# Qt 鎻掍欢
 QT_PLUGIN_DIR="/mingw64/share/qt5/plugins"
 mkdir -p "$DIST/platforms" "$DIST/iconengines" "$DIST/imageformats" "$DIST/styles"
 cp "$QT_PLUGIN_DIR/platforms/qwindows.dll" "$DIST/platforms/"
@@ -234,62 +234,69 @@ cp "$QT_PLUGIN_DIR/iconengines/"*.dll "$DIST/iconengines/" 2>/dev/null || true
 cp "$QT_PLUGIN_DIR/imageformats/"*.dll "$DIST/imageformats/" 2>/dev/null || true
 cp "$QT_PLUGIN_DIR/styles/"*.dll "$DIST/styles/" 2>/dev/null || true
 
-# 自动收集所有 MinGW DLL 依赖
+# 鑷姩鏀堕泦鎵€鏈?MinGW DLL 渚濊禆
 bash "$SRC_ROOT/libs/collect_dlls_mingw.sh" "$DIST"
 
-# Go 后端二进制
-cp deployment/windows64/newbeeplus_core.exe "$DIST/" 2>/dev/null || true
+# core binaries
+cp deployment/windows64/newbeeplus_core.exe "$DIST/core/" 2>/dev/null || true
 cp deployment/windows64/updater.exe "$DIST/" 2>/dev/null || true
 
-# 公共资源
+# 鍏叡璧勬簮
 cp res/public/* "$DIST/" 2>/dev/null || true
 
-# 下载 geodata 到 dist/
+# 涓嬭浇 geodata 鍒?dist/
 download_geodata "$DIST"
 
-# 下载代理核心到 dist/
+# 涓嬭浇浠ｇ悊鏍稿績鍒?dist/
 echo ""
-echo "=== 下载代理核心 (dist) ==="
+echo "=== 涓嬭浇浠ｇ悊鏍稿績 (dist) ==="
 
-# sing-box (newbeeplus_core) - 仅在编译的不存在时下载
-if [ ! -f "$DIST/newbeeplus_core.exe" ]; then
-    echo "  下载 sing-box (newbeeplus_core) ..."
+# sing-box (newbeeplus_core)
+if [ ! -f "$DIST/core/newbeeplus_core.exe" ]; then
+    echo "  涓嬭浇 sing-box (newbeeplus_core) ..."
+    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
     SINGBOX_VER=$(curl -fLs "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
     if [ -n "$SINGBOX_VER" ]; then
+        SINGBOX_TMP_DIR="/tmp/sing-box-${SINGBOX_VER}-$$"
+        rm -rf "$SINGBOX_TMP_DIR"
+        mkdir -p "$SINGBOX_TMP_DIR"
         curl -fLo /tmp/sing-box.tar.gz \
             "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.tar.gz" \
-            && tar -xzf /tmp/sing-box.tar.gz -C /tmp --wildcards '*/sing-box.exe' \
-            && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/newbeeplus_core.exe" \; \
+            && tar -xzf /tmp/sing-box.tar.gz -C "$SINGBOX_TMP_DIR" --wildcards '*/sing-box.exe' \
+            && find "$SINGBOX_TMP_DIR" -name 'sing-box.exe' -exec cp {} "$DIST/core/newbeeplus_core.exe" \; \
             && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
-            || echo "  警告: 下载 sing-box 失败，尝试 zip 格式 ..."
-        if [ ! -f "$DIST/newbeeplus_core.exe" ]; then
+            || echo "  璀﹀憡: 涓嬭浇 sing-box 澶辫触锛屽皾璇?zip 鏍煎紡 ..."
+        if [ ! -f "$DIST/core/newbeeplus_core.exe" ]; then
             curl -fLo /tmp/sing-box.zip \
                 "https://github.com/SagerNet/sing-box/releases/download/${SINGBOX_VER}/sing-box-${SINGBOX_VER#v}-windows-amd64.zip" \
-                && unzip -o /tmp/sing-box.zip '*/sing-box.exe' -d /tmp \
-                && find /tmp -name 'sing-box.exe' -exec cp {} "$DIST/newbeeplus_core.exe" \; \
+                && unzip -o /tmp/sing-box.zip '*/sing-box.exe' -d "$SINGBOX_TMP_DIR" \
+                && find "$SINGBOX_TMP_DIR" -name 'sing-box.exe' -exec cp {} "$DIST/core/newbeeplus_core.exe" \; \
                 && echo "  sing-box $SINGBOX_VER -> newbeeplus_core.exe" \
-                || echo "  警告: 下载 sing-box 失败"
+                || echo "  璀﹀憡: 涓嬭浇 sing-box 澶辫触"
         fi
+        rm -rf "$SINGBOX_TMP_DIR"
     else
-        echo "  警告: 无法获取 sing-box 版本号"
+        echo "  Warning: failed to fetch sing-box version"
     fi
+    rm -f /tmp/sing-box.tar.gz /tmp/sing-box.zip
 fi
 
 # Xray
-download_xray "$DIST"
+download_xray "$DIST/core"
 
-# ── Phase 8: 配置 dist 目录外部核心路径 ────────────────────
-
-echo ""
-echo "=== 配置 dist 外部核心路径 ==="
-patch_xray_config "$DIST/config/groups/newbeeplus.json" "$DIST/xray.exe"
-
-# ── 完成，启动 ────────────────────────────────────────────
+# 鈹€鈹€ Phase 8: 閰嶇疆 dist 鐩綍澶栭儴鏍稿績璺緞 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 echo ""
-echo "=== 编译完成 ==="
-echo "  build 目录: $SRC_ROOT/build/  (开发调试)"
-echo "  dist  目录: $DIST/  (发布打包)"
+echo "=== 閰嶇疆 dist 澶栭儴鏍稿績璺緞 ==="
+patch_xray_config "$DIST/config/groups/newbeeplus.json" "$DIST/core/xray.exe"
+
+# 鈹€鈹€ 瀹屾垚锛屽惎鍔?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
 echo ""
-echo "启动 newbeeplus ..."
+echo "=== 缂栬瘧瀹屾垚 ==="
+echo "  build 鐩綍: $SRC_ROOT/build/  (寮€鍙戣皟璇?"
+echo "  dist  鐩綍: $DIST/  (鍙戝竷鎵撳寘)"
+echo ""
+echo "鍚姩 newbeeplus ..."
 "$DIST/newbeeplus.exe" &
+

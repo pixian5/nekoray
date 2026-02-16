@@ -19,7 +19,11 @@ pre_start_linux() {
 
 start() {
   pre_start_linux
-  "./newbeeplus_core" run -c "$CONFIG_PATH"
+  if [ -x "./core/newbeeplus_core" ]; then
+    "./core/newbeeplus_core" run -c "$CONFIG_PATH"
+  else
+    "./newbeeplus_core" run -c "$CONFIG_PATH"
+  fi
 }
 
 stop() {

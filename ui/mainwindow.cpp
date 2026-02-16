@@ -395,8 +395,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     NekoGui::dataStore->core_port = MkPort();
     if (NekoGui::dataStore->core_port <= 0) NekoGui::dataStore->core_port = 19810;
 
-    auto core_path = QApplication::applicationDirPath() + "/";
-    core_path += "newbeeplus_core";
+    auto core_path = QDir::cleanPath(QApplication::applicationDirPath() + "/core/newbeeplus_core");
+    if (!QFileInfo::exists(core_path) && !QFileInfo::exists(core_path + ".exe")) {
+        core_path = QDir::cleanPath(QApplication::applicationDirPath() + "/newbeeplus_core");
+    }
 
     QStringList args;
     args.push_back("newbeeplus");
@@ -1927,7 +1929,11 @@ bool MainWindow::StartVPNProcess() {
 #ifdef Q_OS_WIN
     runOnNewThread([=] {
         vpn_pid = 1; // TODO get pid?
-        WinCommander::runProcessElevated(QApplication::applicationDirPath() + "/newbeeplus_core.exe",
+        auto vpnCorePath = QDir::cleanPath(QApplication::applicationDirPath() + "/core/newbeeplus_core.exe");
+        if (!QFileInfo::exists(vpnCorePath)) {
+            vpnCorePath = QDir::cleanPath(QApplication::applicationDirPath() + "/newbeeplus_core.exe");
+        }
+        WinCommander::runProcessElevated(vpnCorePath,
                                          {"--disable-color", "run", "-c", configPath}, "",
                                          NekoGui::dataStore->vpn_hide_console ? WinCommander::SW_HIDE : WinCommander::SW_SHOWMINIMIZED); // blocking
         vpn_pid = 0;

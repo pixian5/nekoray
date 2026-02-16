@@ -31,6 +31,7 @@ func resolveXrayExecutablePath() (string, error) {
 	if err == nil {
 		exeDir := filepath.Dir(exe)
 		candidates := []string{
+			filepath.Join(exeDir, "core", xrayExecutableName()),
 			filepath.Join(exeDir, "xray_core", xrayExecutableName()),
 			filepath.Join(exeDir, xrayExecutableName()),
 		}

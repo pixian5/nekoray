@@ -396,12 +396,17 @@ namespace NekoGui {
         }
         // 自动查找同目录下的可执行文件
         auto appDir = QApplication::applicationDirPath();
+        QStringList candidates;
 #ifdef Q_OS_WIN
-        auto candidate = appDir + "/" + id + ".exe";
+        candidates << QDir::cleanPath(appDir + "/core/" + id + ".exe");
+        candidates << QDir::cleanPath(appDir + "/" + id + ".exe");
 #else
-        auto candidate = appDir + "/" + id;
+        candidates << QDir::cleanPath(appDir + "/core/" + id);
+        candidates << QDir::cleanPath(appDir + "/" + id);
 #endif
-        if (QFile::exists(candidate)) return candidate;
+        for (const auto &candidate: candidates) {
+            if (QFile::exists(candidate)) return candidate;
+        }
         return "";
     }
 
@@ -447,10 +452,22 @@ namespace NekoGui {
     }
 
     QString FindNewBeePlusCoreRealPath() {
-        auto fn = QApplication::applicationDirPath() + "/newbeeplus_core";
-        auto fi = QFileInfo(fn);
-        if (fi.isSymLink()) return fi.symLinkTarget();
-        return fn;
+#ifdef Q_OS_WIN
+        const auto binaryName = QStringLiteral("newbeeplus_core.exe");
+#else
+        const auto binaryName = QStringLiteral("newbeeplus_core");
+#endif
+        QStringList candidates;
+        auto appDir = QApplication::applicationDirPath();
+        candidates << QDir::cleanPath(appDir + "/core/" + binaryName);
+        candidates << QDir::cleanPath(appDir + "/" + binaryName);
+        for (const auto &fn: candidates) {
+            auto fi = QFileInfo(fn);
+            if (!fi.exists() && !fi.isSymLink()) continue;
+            if (fi.isSymLink()) return fi.symLinkTarget();
+            return fn;
+        }
+        return candidates.first();
     }
 
     short isAdminCache = -1;

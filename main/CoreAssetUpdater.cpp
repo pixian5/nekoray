@@ -185,7 +185,13 @@ namespace NekoGui_update {
                 return configuredPath;
             }
 
-            return app_binary_path("sing-box");
+            auto coreCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/core/sing-box" + current_binary_suffix());
+            if (QFile::exists(coreCandidate)) return coreCandidate;
+
+            auto appCandidate = app_binary_path("sing-box");
+            if (QFile::exists(appCandidate)) return appCandidate;
+
+            return coreCandidate;
         }
 
         QString resolve_xray_target_path() {
@@ -199,9 +205,16 @@ namespace NekoGui_update {
                 return configuredPath;
             }
 
-            auto candidate = QDir::cleanPath(QApplication::applicationDirPath() + "/xray_core/xray" + current_binary_suffix());
-            if (QFile::exists(candidate)) return candidate;
-            return app_binary_path("xray");
+            auto coreCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/core/xray" + current_binary_suffix());
+            if (QFile::exists(coreCandidate)) return coreCandidate;
+
+            auto legacyCandidate = QDir::cleanPath(QApplication::applicationDirPath() + "/xray_core/xray" + current_binary_suffix());
+            if (QFile::exists(legacyCandidate)) return legacyCandidate;
+
+            auto appCandidate = app_binary_path("xray");
+            if (QFile::exists(appCandidate)) return appCandidate;
+
+            return coreCandidate;
         }
 
         QJsonObject fetch_latest_release(const QString &apiUrl, QString &error) {

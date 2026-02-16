@@ -63,9 +63,15 @@ func resolveSingBoxExecutablePath() (string, error) {
 
 	exe, err := os.Executable()
 	if err == nil {
-		candidate := filepath.Join(filepath.Dir(exe), singBoxExecutableName())
-		if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
-			return candidate, nil
+		exeDir := filepath.Dir(exe)
+		candidates := []string{
+			filepath.Join(exeDir, "core", singBoxExecutableName()),
+			filepath.Join(exeDir, singBoxExecutableName()),
+		}
+		for _, candidate := range candidates {
+			if st, err := os.Stat(candidate); err == nil && !st.IsDir() {
+				return candidate, nil
+			}
 		}
 	}
 
