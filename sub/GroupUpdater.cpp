@@ -193,6 +193,48 @@ namespace NekoGui_sub {
         }
     }
 
+    YAML::Node NodeChild(const YAML::Node &n, const std::list<std::string> &keys);
+
+    void ParseXHTTPOptions(const YAML::Node &proxy, const NekoGui_fmt::V2rayStreamSettings *streamConst) {
+        auto stream = const_cast<NekoGui_fmt::V2rayStreamSettings *>(streamConst);
+        if (stream == nullptr) return;
+        if (!(stream->network == "xhttp" || stream->network == "splithttp")) return;
+
+        auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
+        auto http = NodeChild(proxy, {"http-opts", "http-opt"});
+
+        auto hostFromHeaders = [&](const YAML::Node &n) {
+            if (!n.IsMap()) return QString{};
+            auto headers = n["headers"];
+            if (!headers.IsMap()) return QString{};
+            for (auto header: headers) {
+                if (Node2QString(header.first).toLower() == "host") {
+                    return NodeFirstString(header.second);
+                }
+            }
+            return QString{};
+        };
+
+        if (stream->path.isEmpty()) {
+            stream->path = NodeFirstString(xhttp["path"]);
+            if (stream->path.isEmpty()) stream->path = NodeFirstString(http["path"]);
+            if (stream->path.isEmpty()) stream->path = NodeFirstString(proxy["path"]);
+        }
+
+        if (stream->host.isEmpty()) {
+            stream->host = NodeFirstString(xhttp["host"]);
+            if (stream->host.isEmpty()) stream->host = hostFromHeaders(xhttp);
+            if (stream->host.isEmpty()) stream->host = NodeFirstString(http["host"]);
+            if (stream->host.isEmpty()) stream->host = hostFromHeaders(http);
+            if (stream->host.isEmpty()) stream->host = NodeFirstString(proxy["host"]);
+        }
+
+        if (stream->xhttp_mode.isEmpty()) {
+            stream->xhttp_mode = Node2QString(xhttp["mode"]);
+            if (stream->xhttp_mode.isEmpty()) stream->xhttp_mode = Node2QString(proxy["mode"]);
+        }
+    }
+
     int Node2Int(const YAML::Node &n, const int &def = 0) {
         try {
             return n.as<int>();
@@ -342,24 +384,7 @@ namespace NekoGui_sub {
                         bean->stream->path = Node2QString(grpc["grpc-service-name"]);
                     }
 
-                    auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
-                    if (xhttp.IsMap()) {
-                        bean->stream->path = NodeFirstString(xhttp["path"]);
-                        auto xhttpHost = NodeFirstString(xhttp["host"]);
-                        if (xhttpHost.isEmpty()) {
-                            auto headers = xhttp["headers"];
-                            if (headers.IsMap()) {
-                                for (auto header: headers) {
-                                    if (Node2QString(header.first).toLower() == "host") {
-                                        xhttpHost = NodeFirstString(header.second);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        bean->stream->host = xhttpHost;
-                        bean->stream->xhttp_mode = Node2QString(xhttp["mode"]);
-                    }
+                    ParseXHTTPOptions(proxy, bean->stream.get());
 
                     auto reality = NodeChild(proxy, {"reality-opts"});
                     if (reality.IsMap()) {
@@ -414,24 +439,7 @@ namespace NekoGui_sub {
                         bean->stream->path = Node2QString(grpc["grpc-service-name"]);
                     }
 
-                    auto xhttp = NodeChild(proxy, {"xhttp-opts", "xhttp-opt", "splithttp-opts", "splithttp-opt"});
-                    if (xhttp.IsMap()) {
-                        bean->stream->path = NodeFirstString(xhttp["path"]);
-                        auto xhttpHost = NodeFirstString(xhttp["host"]);
-                        if (xhttpHost.isEmpty()) {
-                            auto headers = xhttp["headers"];
-                            if (headers.IsMap()) {
-                                for (auto header: headers) {
-                                    if (Node2QString(header.first).toLower() == "host") {
-                                        xhttpHost = NodeFirstString(header.second);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        bean->stream->host = xhttpHost;
-                        bean->stream->xhttp_mode = Node2QString(xhttp["mode"]);
-                    }
+                    ParseXHTTPOptions(proxy, bean->stream.get());
 
                     auto h2 = NodeChild(proxy, {"h2-opts", "h2-opt"});
                     if (h2.IsMap()) {
