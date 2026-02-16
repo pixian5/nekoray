@@ -1513,11 +1513,11 @@ End: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Duplicate(&amp;D)</source>
+        <source>复制当前选中文本</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Link Location Copy(&amp;L)</source>
+        <source>复制链接地址</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

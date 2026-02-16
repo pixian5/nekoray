@@ -1570,7 +1570,7 @@ void MainWindow::show_log_impl(const QString &log) {
 void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &pos) {
     QMenu menu(ui->masterLogBrowser);
     auto action_copy = new QAction(&menu);
-    action_copy->setText(tr("Duplicate(&D)"));
+    action_copy->setText(tr("复制当前选中文本"));
     action_copy->setShortcut(QKeySequence::Copy);
     action_copy->setShortcutContext(Qt::WidgetShortcut);
     action_copy->setShortcutVisibleInContextMenu(true);
@@ -1583,7 +1583,7 @@ void MainWindow::on_masterLogBrowser_customContextMenuRequested(const QPoint &po
     auto link = ui->masterLogBrowser->anchorAt(pos);
     if (!link.isEmpty()) {
         auto action_copy_link = new QAction(&menu);
-        action_copy_link->setText(tr("Link Location Copy(&L)"));
+        action_copy_link->setText(tr("复制链接地址"));
         action_copy_link->setShortcut(QKeySequence(Qt::Key_L));
         action_copy_link->setShortcutContext(Qt::WidgetShortcut);
         action_copy_link->setShortcutVisibleInContextMenu(true);
