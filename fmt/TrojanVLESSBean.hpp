@@ -24,6 +24,8 @@ namespace NekoGui_fmt {
 
         QString DisplayType() override { return proxy_type == proxy_VLESS ? "VLESS" : "Trojan"; };
 
+        QString DisplayCoreType() override;
+
         CoreObjOutboundBuildResult BuildCoreObjSingBox() override;
 
         CoreObjOutboundBuildResult BuildCoreObjXray() override;

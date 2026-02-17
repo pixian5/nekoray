@@ -21,6 +21,8 @@ namespace NekoGui_fmt {
 
         QString DisplayType() override { return "VMess"; };
 
+        QString DisplayCoreType() override;
+
         CoreObjOutboundBuildResult BuildCoreObjSingBox() override;
 
         CoreObjOutboundBuildResult BuildCoreObjXray() override;

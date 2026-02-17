@@ -25,6 +25,15 @@ namespace NekoGui_fmt {
     // 1: Mapping External
     // 2: Direct External
 
+    namespace {
+        bool IsXhttpLikeNetwork(AbstractBean *bean) {
+            auto stream = GetStreamSettings(bean);
+            if (stream == nullptr) return false;
+            auto net = stream->network.trimmed().toLower();
+            return net == "xhttp" || net == "splithttp";
+        }
+    }
+
     int NaiveBean::NeedExternal(bool isFirstProfile) {
         if (isFirstProfile) {
             if (NekoGui::dataStore->spmode_vpn) {
@@ -50,6 +59,15 @@ namespace NekoGui_fmt {
             return 1;
         };
 
+        if (proxy_type == proxy_Hysteria2) {
+            auto coreMap = QString2QJsonObject(NekoGui::dataStore->extraCore->core_map);
+            auto hy2CorePath = coreMap.value("hysteria2").toString().trimmed();
+            if (hy2CorePath.isEmpty()) {
+                // If hy2 external core is not configured, always stay on sing-box internal.
+                return 0;
+            }
+        }
+
         if (!forceExternal) {
             // sing-box support
             return 0;
@@ -66,8 +84,9 @@ namespace NekoGui_fmt {
 
     // Xray mode: route VMess/VLESS/Trojan/SS through external xray process
 
-    static int NeedExternalXray(bool isFirstProfile) {
-        if (NekoGui::coreType != NekoGui::CoreType::XRAY) return 0;
+    static int NeedExternalXray(AbstractBean *bean, bool isFirstProfile) {
+        auto forceXray = IsXhttpLikeNetwork(bean);
+        if (!forceXray && NekoGui::coreType != NekoGui::CoreType::XRAY) return 0;
         if (isFirstProfile) {
             if (NekoGui::dataStore->spmode_vpn) return 1;
             return 2;
@@ -75,20 +94,40 @@ namespace NekoGui_fmt {
         return 1;
     }
 
+    QString VMessBean::DisplayCoreType() {
+        if (IsXhttpLikeNetwork(this)) return "xray";
+        return software_core_name;
+    }
+
+    QString TrojanVLESSBean::DisplayCoreType() {
+        if (IsXhttpLikeNetwork(this)) return "xray";
+        return software_core_name;
+    }
+
+    QString ShadowSocksBean::DisplayCoreType() {
+        if (IsXhttpLikeNetwork(this)) return "xray";
+        return software_core_name;
+    }
+
+    QString SocksHttpBean::DisplayCoreType() {
+        if (IsXhttpLikeNetwork(this)) return "xray";
+        return software_core_name;
+    }
+
     int VMessBean::NeedExternal(bool isFirstProfile) {
-        return NeedExternalXray(isFirstProfile);
+        return NeedExternalXray(this, isFirstProfile);
     }
 
     int TrojanVLESSBean::NeedExternal(bool isFirstProfile) {
-        return NeedExternalXray(isFirstProfile);
+        return NeedExternalXray(this, isFirstProfile);
     }
 
     int ShadowSocksBean::NeedExternal(bool isFirstProfile) {
-        return NeedExternalXray(isFirstProfile);
+        return NeedExternalXray(this, isFirstProfile);
     }
 
     int SocksHttpBean::NeedExternal(bool isFirstProfile) {
-        return NeedExternalXray(isFirstProfile);
+        return NeedExternalXray(this, isFirstProfile);
     }
 
     ExternalBuildResult NaiveBean::BuildExternal(int mapping_port, int socks_port, int external_stat) {

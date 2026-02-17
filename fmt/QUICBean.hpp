@@ -84,7 +84,7 @@ namespace NekoGui_fmt {
 
         QString DisplayCoreType() override {
             if (NeedExternal(true) == 0) {
-                return software_core_name;
+                return "sing-box";
             } else if (proxy_type == proxy_TUIC) {
                 return "tuic";
             } else {
